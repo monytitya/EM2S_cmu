@@ -1,0 +1,54 @@
+﻿services:
+  app:
+    build: .
+    container_name: cmuspringboot_app
+    depends_on:
+      - postgres
+    ports:
+      - "9090:9090"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_DOC_SWAGGER_UI_PATH: /swagger-ui.html
+    networks:
+      - db
+
+  postgres:
+    image: postgres:latest
+    container_name: container_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /data/postgres
+    volumes:
+      - db:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - db
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: cmuspring_pgAdmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@rac.gov.kh
+      PGADMIN_DEFAULT_PASSWORD: admin@rac.gov.kh
+    ports:
+      - "8081:80"
+    depends_on:
+      - postgres
+    volumes:
+      - db:/data/pgadmin
+    networks:
+      - db
+
+networks:
+  db:
+    driver: bridge
+
+volumes:
+  db:
