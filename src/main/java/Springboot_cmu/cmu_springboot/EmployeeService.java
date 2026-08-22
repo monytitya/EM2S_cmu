@@ -14,11 +14,11 @@ public class EmployeeService implements EmployeeInterface{
 
     @Override
     public List<Employee> findAll() {
-        return employeeRepo.findAll();  // Built in findAll of JpaRepository
+        return employeeRepo.findAll();
     }
     @Override
     public Optional<Employee> findById(Integer id) {
-        return employeeRepo.findById(id);   // Built-in findById of JpaRepository and return Optional
+        return employeeRepo.findById(id); 
     }
 
     @Override
