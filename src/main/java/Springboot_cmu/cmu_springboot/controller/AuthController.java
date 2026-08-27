@@ -40,7 +40,6 @@ public class AuthController {
         this.roleRepository = roleRepository;
     }
 
-    // ==================== LOGIN ====================
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) throws Exception {
         try {
@@ -64,13 +63,12 @@ public class AuthController {
         return ResponseEntity.ok(new AuthResponse(jwt));
     }
 
-    // ==================== REGISTER (PUBLIC) ====================
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
         String username = request.get("username");
         String email = request.get("email");
         String password = request.get("password");
-        String roleName = request.getOrDefault("role", "USER"); // Default role = USER
+        String roleName = request.getOrDefault("role", "USER"); 
 
         // Validate inputs
         if (username == null || email == null || password == null) {
