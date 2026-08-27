@@ -2,13 +2,13 @@ package Springboot_cmu.cmu_springboot.entity;
 
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "\"user\"")
 public class User {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true, length = 50)
@@ -18,7 +18,7 @@ public class User {
     private String email;
 
     @Column(nullable = false)
-    private UUID password; 
+    private String password; 
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")
@@ -32,7 +32,7 @@ public class User {
 
     public User() {}
 
-    public User(Long id, String username, String email, UUID password, Role role, Boolean isActive, OffsetDateTime lastLogin) {
+    public User(Long id, String username, String email, String password, Role role, Boolean isActive, OffsetDateTime lastLogin) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -66,11 +66,11 @@ public class User {
         this.email = email;
     }
 
-    public UUID getPassword() {
+    public String getPassword() {
         return password;
     }
 
-    public void setPassword(UUID password) {
+    public void setPassword(String password) {
         this.password = password;
     }
 

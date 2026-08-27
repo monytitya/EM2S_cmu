@@ -8,6 +8,7 @@ import java.time.LocalDate;
 public class Employee {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -37,8 +38,8 @@ public class Employee {
     @Column(name = "department_id")
     private Long departmentId;
 
-    // Typo from the SQL schema
-    @Column(name = "positoin_id")
+    // Fixed typo: positoin_id -> position_id
+    @Column(name = "position_id")
     private Long positionId;
 
     public Employee() {}

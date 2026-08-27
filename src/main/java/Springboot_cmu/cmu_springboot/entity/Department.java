@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 public class Department {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, length = 50)
@@ -15,7 +16,7 @@ public class Department {
 
     private Long code;
 
-    @Column(name = "manger_id")
+    @Column(name = "manager_id")
     private Long managerId;
 
     private Long positions; // FK to Positions
@@ -26,8 +27,8 @@ public class Department {
     @Column(name = "min_salary")
     private BigDecimal minSalary;
 
-    @Column(name = "mas_salary")
-    private BigDecimal maxSalary; // mas_salary in schema
+    @Column(name = "max_salary")
+    private BigDecimal maxSalary;
 
     public Department() {}
 

@@ -8,6 +8,7 @@ import java.time.LocalDate;
 public class Leave {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "employee_id", nullable = false)

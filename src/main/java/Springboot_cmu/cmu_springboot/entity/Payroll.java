@@ -10,6 +10,7 @@ import java.time.OffsetDateTime;
 public class Payroll {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "employee_id", nullable = false)

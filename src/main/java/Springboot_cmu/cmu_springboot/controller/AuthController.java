@@ -16,7 +16,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -94,7 +93,6 @@ public class AuthController {
         // Find or create the role
         Role role = roleRepository.findByName(roleName.toUpperCase()).orElseGet(() -> {
             Role newRole = new Role();
-            newRole.setId(System.currentTimeMillis()); // simple ID generation
             newRole.setName(roleName.toUpperCase());
             newRole.setDescriptions(roleName.toUpperCase() + " role");
             return roleRepository.save(newRole);
@@ -102,12 +100,9 @@ public class AuthController {
 
         // Create the user
         User user = new User();
-        user.setId(System.currentTimeMillis()); // simple ID generation
         user.setUsername(username);
         user.setEmail(email);
-        user.setPassword(UUID.fromString(
-                UUID.nameUUIDFromBytes(password.getBytes()).toString()
-        ));
+        user.setPassword(password);  // plain-text; NoOpPasswordEncoder is used
         user.setRole(role);
         user.setIsActive(true);
 

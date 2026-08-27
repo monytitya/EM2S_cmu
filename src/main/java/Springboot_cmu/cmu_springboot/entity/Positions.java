@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 public class Positions {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(length = 50)
@@ -15,7 +16,7 @@ public class Positions {
 
     private Long code;
 
-    @Column(name = "manger_id")
+    @Column(name = "manager_id")
     private Long managerId;
 
     private Long positions; // self-referencing hierarchy key
@@ -26,8 +27,8 @@ public class Positions {
     @Column(name = "min_salary")
     private BigDecimal minSalary;
 
-    @Column(name = "mas_salary")
-    private BigDecimal maxSalary; // mapped to mas_salary from SQL schema
+    @Column(name = "max_salary")
+    private BigDecimal maxSalary;
 
     public Positions() {}
 

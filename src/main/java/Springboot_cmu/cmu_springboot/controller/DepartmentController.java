@@ -32,8 +32,9 @@ public class DepartmentController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public Department createDepartment(@RequestBody Department dept) {
-        return departmentRepository.save(dept);
+    public ResponseEntity<Department> createDepartment(@RequestBody Department dept) {
+        Department saved = departmentRepository.save(dept);
+        return ResponseEntity.status(201).body(saved);
     }
 
     @PreAuthorize("hasRole('ADMIN')")

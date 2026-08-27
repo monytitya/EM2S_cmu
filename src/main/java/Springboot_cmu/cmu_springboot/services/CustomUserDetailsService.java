@@ -33,7 +33,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
-                user.getPassword().toString(), // Using password field (in a real setup, verify password hashing strategy)
+                user.getPassword(),
                 Collections.singletonList(authority)
         );
     }
