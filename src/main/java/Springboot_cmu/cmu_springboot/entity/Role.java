@@ -16,6 +16,7 @@ public class Role {
     @Column(length = 255)
     private String descriptions;
 
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "parentRole"})
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id")
     private Role parentRole;

@@ -48,7 +48,19 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return new PasswordEncoder() {
+            @Override
+            public String encode(CharSequence rawPassword) {
+                if (rawPassword == null) return null;
+                return java.util.UUID.nameUUIDFromBytes(rawPassword.toString().getBytes()).toString();
+            }
+
+            @Override
+            public boolean matches(CharSequence rawPassword, String encodedPassword) {
+                if (rawPassword == null || encodedPassword == null) return false;
+                return encode(rawPassword).equals(encodedPassword);
+            }
+        };
     }
 
     @Bean

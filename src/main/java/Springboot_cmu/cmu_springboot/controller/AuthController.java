@@ -102,7 +102,7 @@ public class AuthController {
         User user = new User();
         user.setUsername(username);
         user.setEmail(email);
-        user.setPassword(password);  // plain-text; NoOpPasswordEncoder is used
+        user.setPassword(java.util.UUID.nameUUIDFromBytes(password.getBytes()).toString()); // Uses same logic as PasswordEncoder
         user.setRole(role);
         user.setIsActive(true);
 

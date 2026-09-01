@@ -1,4 +1,4 @@
--- 1. Roles
+=-- 1. Roles
 CREATE TABLE "role" (
     "id" BIGINT PRIMARY KEY,
     "name" VARCHAR(50) NOT NULL,

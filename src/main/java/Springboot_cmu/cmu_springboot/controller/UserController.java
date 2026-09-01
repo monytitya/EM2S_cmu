@@ -43,7 +43,12 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<Map<String, Object>> createUser(@RequestBody User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        if (user.getId() == null) {
+            user.setId(System.currentTimeMillis());
+        }
+        if (user.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
         User saved = userRepository.save(user);
         return ResponseEntity.status(201).body(toSafeMap(saved));
     }

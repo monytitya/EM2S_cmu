@@ -33,7 +33,9 @@ public class RoleController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public Role createRole(@RequestBody Role role) {
-        return roleRepository.save(role);
+        Role savedRole = roleRepository.save(role);
+        // Reload from database to fully populate the parentRole details in the JSON response
+        return roleRepository.findById(savedRole.getId()).orElse(savedRole);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -43,7 +45,9 @@ public class RoleController {
             role.setName(roleDetails.getName());
             role.setDescriptions(roleDetails.getDescriptions());
             role.setParentRole(roleDetails.getParentRole());
-            return ResponseEntity.ok(roleRepository.save(role));
+            roleRepository.save(role);
+            // Reload from database to fully populate the parentRole details in the JSON response
+            return ResponseEntity.ok(roleRepository.findById(role.getId()).orElse(role));
         }).orElse(ResponseEntity.notFound().build());
     }
 
