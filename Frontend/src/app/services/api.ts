@@ -26,6 +26,13 @@ export interface UserRecord {
 export type ResourceRecord = Record<string, unknown>;
 
 export interface LoginResponse { jwt: string; }
+export interface RegisterResponse {
+	message: string;
+	userId: number;
+	username: string;
+	role: string;
+	jwt: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class Api {
@@ -37,6 +44,9 @@ export class Api {
 	}
 
 	login(username: string, password: string): Observable<LoginResponse> { return this.http.post<LoginResponse>(`${this.baseUrl}/auth/login`, { username, password }); }
+	register(username: string, email: string, password: string, role = 'USER'): Observable<RegisterResponse> {
+		return this.http.post<RegisterResponse>(`${this.baseUrl}/auth/register`, { username, email, password, role });
+	}
 
 	getUsers(): Observable<UserRecord[]> { return this.http.get<UserRecord[]>(`${this.baseUrl}/users`); }
 	createUser(user: Partial<UserRecord> & { password?: string }): Observable<UserRecord> { return this.http.post<UserRecord>(`${this.baseUrl}/users`, user); }

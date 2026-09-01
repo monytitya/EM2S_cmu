@@ -2,9 +2,7 @@ import { HttpInterceptorFn } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
-import { Api } from './api';
-
-export interface LoginResponse { jwt: string; }
+import { Api, LoginResponse, RegisterResponse } from './api';
 
 @Injectable({ providedIn: 'root' })
 export class Auth {
@@ -14,6 +12,10 @@ export class Auth {
 
   login(username: string, password: string): Observable<LoginResponse> {
     return this.api.login(username, password);
+  }
+
+  register(username: string, email: string, password: string, role = 'USER'): Observable<RegisterResponse> {
+    return this.api.register(username, email, password, role);
   }
 
   setToken(token: string): void { localStorage.setItem(this.storageKey, token); }

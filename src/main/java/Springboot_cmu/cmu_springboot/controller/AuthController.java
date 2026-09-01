@@ -13,6 +13,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -26,17 +27,20 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public AuthController(AuthenticationManager authenticationManager,
                           CustomUserDetailsService userDetailsService,
                           JwtUtil jwtUtil,
                           UserRepository userRepository,
-                          RoleRepository roleRepository) {
+                          RoleRepository roleRepository,
+                          PasswordEncoder passwordEncoder) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/login")
@@ -102,7 +106,7 @@ public class AuthController {
         User user = new User();
         user.setUsername(username);
         user.setEmail(email);
-        user.setPassword(java.util.UUID.nameUUIDFromBytes(password.getBytes()).toString()); // Uses same logic as PasswordEncoder
+        user.setPassword(passwordEncoder.encode(password));
         user.setRole(role);
         user.setIsActive(true);
 
