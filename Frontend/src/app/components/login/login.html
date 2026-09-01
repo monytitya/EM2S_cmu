@@ -1,1 +1,139 @@
-<main class="login-page"><section class="login-card"><div class="brand"><span class="brand-mark">H</span><strong>HUMAN<span>IQ</span></strong></div><p class="eyebrow">Workforce intelligence</p><h1>{{ mode === 'login' ? 'Welcome back' : 'Create account' }}</h1><p class="subtitle">{{ mode === 'login' ? 'Sign in to manage your people operations.' : 'Register to access the HR workspace.' }}</p><form (ngSubmit)="submit()"><label>Username<input name="username" [(ngModel)]="username" autocomplete="username" placeholder="Enter username" /></label><label *ngIf="mode === 'register'">Email<input name="email" [(ngModel)]="email" autocomplete="email" type="email" placeholder="Enter email" /></label><label>Password<input name="password" [(ngModel)]="password" autocomplete="current-password" type="password" placeholder="Enter password" /></label><p class="error" *ngIf="error">{{ error }}</p><button type="submit" [disabled]="submitting">{{ submitting ? (mode === 'login' ? 'Signing in...' : 'Registering...') : (mode === 'login' ? 'Sign in' : 'Register') }}</button></form><p class="switch-link"><button type="button" (click)="toggleMode()">{{ mode === 'login' ? 'Need an account? Register' : 'Already have an account? Sign in' }}</button></p></section><aside class="login-art"><p>People data,<br /><strong>made useful.</strong></p><span>HR operations at a glance</span></aside></main>
+<main class="login-page flex min-h-screen items-center justify-center bg-slate-100 px-4 py-8 sm:px-6 lg:px-8">
+  <section class="w-full max-w-6xl overflow-hidden rounded-[32px] border border-slate-200 bg-white/70 shadow-soft backdrop-blur-sm">
+    <div class="grid min-h-[720px] lg:grid-cols-[1fr_1.2fr]">
+      <aside class="relative hidden overflow-hidden bg-gradient-to-br from-sky-900 via-blue-800 to-indigo-900 p-10 text-white lg:flex lg:flex-col lg:justify-between">
+        <div class="relative z-10">
+          <div class="mb-12 flex items-center gap-3">
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-lg font-bold ring-1 ring-white/20">H</div>
+            <div>
+              <p class="text-xs uppercase tracking-[0.28em] text-blue-100/80">Humaniq</p>
+              <p class="text-xl font-semibold tracking-wide">Workforce Suite</p>
+            </div>
+          </div>
+
+          <div class="space-y-6">
+            <span class="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.32em] text-blue-100">
+              {{ mode === 'login' ? 'Welcome back' : 'Create account' }}
+            </span>
+            <h2 class="max-w-xs text-4xl font-bold leading-tight">
+              {{ mode === 'login' ? 'Manage your team with clarity.' : 'Build your team profile in minutes.' }}
+            </h2>
+            <p class="max-w-sm text-base text-blue-100/80">
+              {{ mode === 'login' ? 'Track attendance, payroll, and employee performance from one modern workspace.' : 'Set up your account and start managing people, performance, and operations with confidence.' }}
+            </p>
+          </div>
+        </div>
+
+        <div class="relative z-10 grid gap-4">
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
+            <p class="text-xs uppercase tracking-[0.22em] text-blue-100/70">Productivity</p>
+            <p class="mt-3 text-3xl font-bold">92%</p>
+            <p class="mt-1 text-sm text-blue-100/70">Operational efficiency boost</p>
+          </div>
+        </div>
+
+        <div class="absolute -bottom-16 -right-12 h-52 w-52 rounded-full bg-orange-400/30 blur-3xl"></div>
+        <div class="absolute left-0 top-0 h-64 w-64 rounded-full bg-sky-400/15 blur-3xl"></div>
+      </aside>
+
+      <section class="flex items-center justify-center bg-white/80 px-5 py-8 sm:px-8 lg:px-12 xl:px-16">
+        <div class="w-full max-w-lg">
+          <div class="mb-8 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-lg font-bold text-white">H</div>
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Humaniq</p>
+                <p class="text-lg font-bold text-slate-800">Access portal</p>
+              </div>
+            </div>
+
+            <div class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+              {{ mode === 'login' ? 'SIGN IN' : 'REGISTER' }}
+            </div>
+          </div>
+
+          <div class="mb-8">
+            <p class="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-blue-600">
+              {{ mode === 'login' ? 'Workforce intelligence' : 'Create account' }}
+            </p>
+            <h1 class="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+              {{ mode === 'login' ? 'Welcome back' : 'Start your journey' }}
+            </h1>
+            <p class="mt-3 text-base text-slate-500">
+              {{ mode === 'login' ? 'Sign in to continue managing your workforce.' : 'Create your account to manage people, leave, and performance in one place.' }}
+            </p>
+          </div>
+
+          <form (ngSubmit)="submit()" class="space-y-5">
+            <div>
+              <label class="mb-2 block text-sm font-semibold text-slate-700">Username</label>
+              <input
+                name="username"
+                [(ngModel)]="username"
+                autocomplete="username"
+                placeholder="Enter your username"
+                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+              />
+            </div>
+
+            <div *ngIf="mode === 'register'">
+              <label class="mb-2 block text-sm font-semibold text-slate-700">Email</label>
+              <input
+                name="email"
+                [(ngModel)]="email"
+                autocomplete="email"
+                type="email"
+                placeholder="Enter your email"
+                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+              />
+            </div>
+
+            <div *ngIf="mode === 'register'">
+              <label class="mb-2 block text-sm font-semibold text-slate-700">Role</label>
+              <select
+                name="role"
+                [(ngModel)]="role"
+                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+              >
+                <option value="USER">User</option>
+                <option value="ADMIN">Admin</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="mb-2 block text-sm font-semibold text-slate-700">Password</label>
+              <input
+                name="password"
+                [(ngModel)]="password"
+                [attr.autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"
+                type="password"
+                placeholder="Enter your password"
+                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+              />
+            </div>
+
+            <p *ngIf="error" class="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-600">
+              {{ error }}
+            </p>
+
+            <button
+              type="submit"
+              [disabled]="submitting"
+              class="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-200 transition hover:from-blue-500 hover:to-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {{ submitting ? (mode === 'login' ? 'Signing in...' : 'Registering...') : (mode === 'login' ? 'Sign in' : 'Register account') }}
+            </button>
+
+            <button
+              type="button"
+              (click)="toggleMode()"
+              class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100"
+            >
+              {{ mode === 'login' ? 'Need an account? Register' : 'Already have an account? Sign in' }}
+            </button>
+          </form>
+        </div>
+      </section>
+    </div>
+  </section>
+</main>
