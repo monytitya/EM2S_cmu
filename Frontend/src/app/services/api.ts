@@ -37,7 +37,19 @@ export interface RegisterResponse {
 @Injectable({ providedIn: 'root' })
 export class Api {
 	private readonly http = inject(HttpClient);
-	private readonly baseUrl = 'http://localhost:9090/api';
+	private readonly baseUrl = this.getApiBaseUrl();
+
+	private getApiBaseUrl(): string {
+		// Use relative API path to match backend server origin
+		const protocol = window.location.protocol;
+		const hostname = window.location.hostname;
+		const port = window.location.port ? `:${window.location.port}` : '';
+		const baseHost = `${protocol}//${hostname}${port}`;
+		if (hostname === 'localhost' && window.location.port === '4200') {
+			return 'http://localhost:9090/api';
+		}
+		return `${baseHost}/api`;
+	}
 
 	getEmployeeOverview(): Observable<EmployeeOverview[]> {
 		return this.http.get<EmployeeOverview[]>(`${this.baseUrl}/employees/details`);
