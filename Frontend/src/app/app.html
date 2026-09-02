@@ -1,15 +1,11 @@
-<div class="flex h-[100vh]" style="height: 100vh; display: flex;">
-  <!-- Sidebar -->
-  <app-sidebar style="width: 260px; flex-shrink: 0; background: var(--bg-sidebar); border-right: 1px solid var(--border-color);"></app-sidebar>
-  
-  <!-- Main Layout -->
-  <div class="flex-col w-full h-full" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-    <!-- Topbar -->
-    <app-topbar style="height: 64px; border-bottom: 1px solid var(--border-color); background: var(--bg-card); flex-shrink: 0;"></app-topbar>
-    
-    <!-- Main Content Area -->
-    <main style="flex: 1; overflow-y: auto; padding: 2rem; background: var(--bg-main);">
-      <router-outlet></router-outlet>
-    </main>
+@if (router.url === '/login') {
+  <router-outlet></router-outlet>
+} @else {
+  <div class="app-shell">
+    <app-sidebar></app-sidebar>
+    <div class="app-content">
+      <app-topbar></app-topbar>
+      <main><router-outlet></router-outlet></main>
+    </div>
   </div>
-</div>
+}

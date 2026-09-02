@@ -42,6 +42,9 @@ public class Employee {
     @Column(name = "position_id")
     private Long positionId;
 
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private String imageUrl;
+
     public Employee() {}
 
     public Employee(Long id, User user, Long employeeCode, String firstName, String lastName, String gender, LocalDate dob, String phone, String address, Long departmentId, Long positionId) {
@@ -144,5 +147,13 @@ public class Employee {
 
     public void setPositionId(Long positionId) {
         this.positionId = positionId;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

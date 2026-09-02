@@ -19,10 +19,12 @@ export class Login {
   role = 'USER';
   mode: 'login' | 'register' = 'login';
   error = '';
+  success = '';
   submitting = false;
 
   toggleMode(): void {
     this.error = '';
+    this.success = '';
     this.mode = this.mode === 'login' ? 'register' : 'login';
   }
 
@@ -37,12 +39,14 @@ export class Login {
       }
 
       this.error = '';
+      this.success = '';
       this.submitting = true;
       this.auth.register(trimmedUsername, trimmedEmail, this.password, this.role).subscribe({
-        next: ({ jwt }) => {
-          this.auth.setToken(jwt);
+        next: () => {
           this.submitting = false;
-          void this.router.navigate(['/dashboard']);
+          this.mode = 'login';
+          this.password = '';
+          this.success = 'Account created. Sign in with your new credentials.';
         },
         error: () => {
           this.error = 'Registration failed. Please try a different username or email.';
@@ -57,6 +61,7 @@ export class Login {
       return;
     }
     this.error = '';
+    this.success = '';
     this.submitting = true;
     this.auth.login(trimmedUsername, this.password).subscribe({
       next: ({ jwt }) => {

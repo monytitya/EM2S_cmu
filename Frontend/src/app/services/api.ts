@@ -40,12 +40,11 @@ export class Api {
 	private readonly baseUrl = this.getApiBaseUrl();
 
 	private getApiBaseUrl(): string {
-		// Use relative API path to match backend server origin
 		const protocol = window.location.protocol;
 		const hostname = window.location.hostname;
 		const port = window.location.port ? `:${window.location.port}` : '';
 		const baseHost = `${protocol}//${hostname}${port}`;
-		if (hostname === 'localhost' && window.location.port === '4200') {
+		if ((hostname === 'localhost' || hostname === '127.0.0.1') && window.location.port !== '9090') {
 			return 'http://localhost:9090/api';
 		}
 		return `${baseHost}/api`;

@@ -39,4 +39,21 @@ export class Dashboard {
     const salaries = employees.map((employee) => employee.basicSalary || 0).filter(Boolean);
     return salaries.length ? salaries.reduce((sum, salary) => sum + salary, 0) / salaries.length : 0;
   }
+
+  countWithPayroll(employees: EmployeeOverview[]): number {
+    return employees.filter((employee) => employee.netPay !== undefined).length;
+  }
+
+  countWithLeave(employees: EmployeeOverview[]): number {
+    return employees.filter((employee) => employee.leaveTotalDays !== undefined).length;
+  }
+
+  countByRole(employees: EmployeeOverview[]): { name: string; value: number }[] {
+    const counts = new Map<string, number>();
+    employees.forEach((employee) => {
+      const role = employee.positionTitle || 'Unassigned';
+      counts.set(role, (counts.get(role) || 0) + 1);
+    });
+    return Array.from(counts, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }
 }

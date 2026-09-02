@@ -1,1 +1,39 @@
-<section class="resource-page" *ngIf="config$ | async as config"><header class="page-heading"><div><p class="eyebrow">Workspace management</p><h1>{{ config.title }}</h1><p class="subtitle">{{ config.description }}</p></div><button class="primary-button" type="button">＋ Add {{ config.title | lowercase | slice:0:-1 }}</button></header><div class="toolbar"><label class="search-box">⌕ <input [(ngModel)]="query" placeholder="Search {{ config.title | lowercase }}" /></label><button class="filter-button" type="button">☷ Filters</button></div><div class="table-panel" *ngIf="state$ | async as state"><div class="table-status"><span>{{ config.title }} <b>{{ visible(state.records).length }}</b></span><span class="state-message" *ngIf="state.loading">Loading data...</span><span class="state-message error" *ngIf="state.error">Unable to load data from the API.</span></div><div class="empty" *ngIf="!state.loading && !state.error && !visible(state.records).length">No {{ config.title | lowercase }} found.</div><div class="table-wrap" *ngIf="state.records.length"><table><thead><tr><th *ngFor="let column of config.columns">{{ column.label }}</th><th>Action</th></tr></thead><tbody><tr *ngFor="let record of visible(state.records)"><td *ngFor="let column of config.columns">{{ display(record, column.key) }}</td><td><button class="row-action" type="button" aria-label="Open record actions">•••</button></td></tr></tbody></table></div></div></section>
+<section class="resource-page" *ngIf="config$ | async as config">
+  <header class="page-heading">
+    <div><p class="eyebrow">Workspace management</p><h1>{{ config.title }}</h1><p class="subtitle">{{ config.description }}</p></div>
+    <button class="primary-button" type="button" (click)="config.resource === 'employees' ? openEditor() : null">+ Add {{ config.title | lowercase | slice:0:-1 }}</button>
+  </header>
+
+  <div class="toolbar"><label class="search-box">⌕ <input [(ngModel)]="query" placeholder="Search {{ config.title | lowercase }}" /></label><button class="filter-button" type="button">☷ Filters</button></div>
+
+  <div class="table-panel" *ngIf="state$ | async as state">
+    <div class="table-status"><span>{{ config.title }} <b>{{ visible(state.records).length }}</b></span><span class="state-message" *ngIf="state.loading">Loading data...</span><span class="state-message error" *ngIf="state.error">Unable to load data from the API.</span></div>
+    <div class="empty" *ngIf="!state.loading && !state.error && !visible(state.records).length">No {{ config.title | lowercase }} found.</div>
+    <div class="table-wrap" *ngIf="state.records.length">
+      <table><thead><tr><th *ngFor="let column of config.columns">{{ column.label }}</th><th>Action</th></tr></thead>
+        <tbody><tr *ngFor="let record of visible(state.records)"><td *ngFor="let column of config.columns"><img *ngIf="column.key === 'imageUrl' && record['imageUrl']" class="employee-thumb" [src]="record['imageUrl']" alt="Employee photo" /><span *ngIf="column.key !== 'imageUrl' || !record['imageUrl']">{{ display(record, column.key) }}</span></td><td class="actions"><button class="row-action" type="button" *ngIf="config.resource === 'employees'" (click)="openEditor(record)">Edit</button><button class="delete-action" type="button" *ngIf="config.resource === 'employees'" (click)="deleteEmployee(record)">Delete</button><button class="row-action" type="button" *ngIf="config.resource !== 'employees'" aria-label="Open record actions">•••</button></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="modalOpen" (click)="closeEditor()">
+    <section class="editor-modal" role="dialog" aria-modal="true" aria-labelledby="employee-editor-title" (click)="$event.stopPropagation()">
+      <div class="modal-heading"><div><p class="eyebrow">Employee record</p><h2 id="employee-editor-title">{{ editingId === null ? 'Add employee' : 'Edit employee' }}</h2></div><button type="button" class="close-button" aria-label="Close editor" (click)="closeEditor()">×</button></div>
+      <form class="employee-form" (ngSubmit)="saveEmployee()">
+        <label>Employee code<input name="employeeCode" [(ngModel)]="employeeForm['employeeCode']" type="number" /></label>
+        <label>First name<input name="firstName" [(ngModel)]="employeeForm['firstName']" required /></label>
+        <label>Last name<input name="lastName" [(ngModel)]="employeeForm['lastName']" required /></label>
+        <label>Gender<select name="gender" [(ngModel)]="employeeForm['gender']"><option value="">Select gender</option><option>Female</option><option>Male</option><option>Other</option></select></label>
+        <label>Date of birth<input name="dob" [(ngModel)]="employeeForm['dob']" type="date" /></label>
+        <label>Phone<input name="phone" [(ngModel)]="employeeForm['phone']" /></label>
+        <label>Department ID<input name="departmentId" [(ngModel)]="employeeForm['departmentId']" type="number" /></label>
+        <label>Position ID<input name="positionId" [(ngModel)]="employeeForm['positionId']" type="number" /></label>
+        <label class="wide">PNG image<input name="imageFile" type="file" accept="image/png,.png" (change)="handleImageSelected($event)" /></label>
+        <div class="image-preview" *ngIf="employeeForm['imageUrl']"><img [src]="employeeForm['imageUrl']" alt="Employee photo preview" /></div>
+        <label class="wide">Address<textarea name="address" [(ngModel)]="employeeForm['address']" rows="3"></textarea></label>
+        <p class="form-error" *ngIf="formError" role="alert">{{ formError }}</p>
+        <div class="modal-actions"><button type="button" class="filter-button" (click)="closeEditor()">Cancel</button><button type="submit" class="primary-button">{{ editingId === null ? 'Create employee' : 'Save changes' }}</button></div>
+      </form>
+    </section>
+  </div>
+</section>

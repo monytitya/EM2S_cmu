@@ -58,6 +58,7 @@ public class EmployeeController {
             employee.setAddress(employeeDetails.getAddress());
             employee.setDepartmentId(employeeDetails.getDepartmentId());
             employee.setPositionId(employeeDetails.getPositionId());
+            employee.setImageUrl(employeeDetails.getImageUrl());
             Employee updated = employeeRepository.save(employee);
             return ResponseEntity.ok(updated);
         }).orElse(ResponseEntity.notFound().build());
