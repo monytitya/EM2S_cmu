@@ -1,6 +1,6 @@
 package Springboot_cmu.cmu_springboot.controller;
 
-import Springboot_cmu.cmu_springboot.dto.EmployeeDetailsProjection;
+import Springboot_cmu.cmu_springboot.dto.EmployeeOverviewProjection;
 import Springboot_cmu.cmu_springboot.entity.Employee;
 import Springboot_cmu.cmu_springboot.repository.EmployeeRepository;
 import org.springframework.http.ResponseEntity;
@@ -19,11 +19,14 @@ public class EmployeeController {
         this.employeeRepository = employeeRepository;
     }
 
-    // Secure endpoint: Accessible by authenticated users
+    @GetMapping
+    public List<Employee> getAllEmployees() {
+        return employeeRepository.findAll();
+    }
+
     @GetMapping("/details")
-    public ResponseEntity<List<EmployeeDetailsProjection>> getEmployeeDetails() {
-        List<EmployeeDetailsProjection> details = employeeRepository.findAllEmployeeDetails();
-        return ResponseEntity.ok(details);
+    public ResponseEntity<List<EmployeeOverviewProjection>> getEmployeeDetails() {
+        return ResponseEntity.ok(employeeRepository.findEmployeeOverview());
     }
 
     // CRUD: Create Employee (Only Admin)
