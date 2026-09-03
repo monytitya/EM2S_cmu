@@ -58,6 +58,7 @@ CREATE TABLE "employee" (
     "address" TEXT,
     "department_id" BIGINT,
     "positoin_id" BIGINT,
+    "image_url" TEXT,
     CONSTRAINT "fk_employee_user" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE SET NULL,
     CONSTRAINT "fk_employee_department" FOREIGN KEY ("department_id") REFERENCES "department"("id") ON DELETE SET NULL,
     CONSTRAINT "fk_employee_position" FOREIGN KEY ("positoin_id") REFERENCES "positions"("id") ON DELETE SET NULL

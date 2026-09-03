@@ -1,4 +1,5 @@
 import { AsyncPipe, LowerCasePipe, NgFor, NgIf, SlicePipe } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -73,23 +74,43 @@ export class ResourcePage {
   }
 
   saveEmployee(): void {
+    const employeeCode = Number(this.employeeForm['employeeCode']);
     const firstName = String(this.employeeForm['firstName'] || '').trim();
     const lastName = String(this.employeeForm['lastName'] || '').trim();
+    if (!Number.isInteger(employeeCode) || employeeCode <= 0) {
+      this.formError = 'Employee code is required and must be a positive whole number.';
+      return;
+    }
     if (!firstName || !lastName) {
       this.formError = 'First name and last name are required.';
       return;
     }
 
-    const payload = { ...this.employeeForm, firstName, lastName };
-    const request = this.editingId === null
-      ? this.api.create('employees', payload)
-      : this.api.update('employees', this.editingId, payload);
-    request.subscribe({
-      next: () => {
-        this.closeEditor();
-        this.refresh$.next();
+    this.api.list('employees').subscribe({
+      next: (records) => {
+        const duplicate = records.some((record) => Number(record['employeeCode']) === employeeCode && record['id'] !== this.editingId);
+        if (duplicate) {
+          this.formError = 'Employee code already exists. Enter a different code.';
+          return;
+        }
+
+        const payload = { ...this.employeeForm, employeeCode, firstName, lastName };
+        const request = this.editingId === null
+          ? this.api.create('employees', payload)
+          : this.api.update('employees', this.editingId, payload);
+        request.subscribe({
+          next: () => {
+            this.closeEditor();
+            this.refresh$.next();
+          },
+          error: (error: HttpErrorResponse) => {
+            this.formError = error.status === 409
+              ? String(error.error?.message || 'Employee code already exists.')
+              : 'Unable to save the employee. Check your data and permissions.';
+          },
+        });
       },
-      error: () => { this.formError = 'Unable to save the employee. Check your data and permissions.'; },
+      error: () => { this.formError = 'Unable to validate the employee code. Try again.'; },
     });
   }
 
