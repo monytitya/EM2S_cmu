@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cmu-springboot
+  labels:
+    app: cmu-springboot
+    component: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cmu-springboot
+  template:
+    metadata:
+      labels:
+        app: cmu-springboot
+    spec:
+      containers:
+        - name: cmu-springboot
+          image: your-registry/cmu-springboot:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9090
+              name: http
+          envFrom:
+            - configMapRef:
+                name: cmu-springboot-config
+            - secretRef:
+                name: cmu-springboot-secret
+          readinessProbe:
+            httpGet:
+              path: /swagger-ui.html
+              port: 9090
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /swagger-ui.html
+              port: 9090
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cmu-springboot
+  labels:
+    app: cmu-springboot
+spec:
+  type: ClusterIP
+  selector:
+    app: cmu-springboot
+  ports:
+    - name: http
+      port: 9090
+      targetPort: 9090
