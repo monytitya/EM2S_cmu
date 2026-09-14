@@ -95,7 +95,7 @@ public class AuthController {
         }
 
         // Find or create the role
-        Role role = roleRepository.findByName(roleName.toUpperCase()).orElseGet(() -> {
+        Role role = roleRepository.findFirstByNameOrderByIdAsc(roleName.toUpperCase()).orElseGet(() -> {
             Role newRole = new Role();
             newRole.setName(roleName.toUpperCase());
             newRole.setDescriptions(roleName.toUpperCase() + " role");

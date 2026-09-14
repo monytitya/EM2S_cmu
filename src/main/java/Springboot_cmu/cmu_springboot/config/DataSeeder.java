@@ -31,7 +31,7 @@ public class DataSeeder implements CommandLineRunner {
     public void run(String... args) {
         jdbcTemplate.execute("ALTER TABLE \"employee\" ALTER COLUMN \"image_url\" TYPE TEXT");
 
-        Role adminRole = roleRepository.findByName("ADMIN").orElseGet(() -> {
+        Role adminRole = roleRepository.findFirstByNameOrderByIdAsc("ADMIN").orElseGet(() -> {
             Role role = new Role();
             role.setName("ADMIN");
             role.setDescriptions("Administrator role");
