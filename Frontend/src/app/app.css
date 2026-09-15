@@ -28,7 +28,7 @@ app-topbar {
 	display: block;
 	height: 64px;
 	flex: 0 0 64px;
-	border-bottom: 1px solid var(--border-color, #e5e7eb);
+	border-bottom: none;
 	background: #fff;
 }
 
@@ -56,6 +56,7 @@ app-topbar {
 	app-topbar {
 		height: 58px;
 		flex-basis: 58px;
+		border-bottom: none;
 	}
 
 	.app-content > main {
