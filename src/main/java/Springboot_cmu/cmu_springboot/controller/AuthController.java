@@ -80,23 +80,21 @@ public class AuthController {
             ));
         }
 
-        // Check if username already exists
         if (userRepository.findByUsername(username).isPresent()) {
             return ResponseEntity.badRequest().body(Map.of(
                     "error", "Username already exists"
             ));
         }
 
-        // Check if email already exists
         if (userRepository.findByEmail(email).isPresent()) {
             return ResponseEntity.badRequest().body(Map.of(
                     "error", "Email already exists"
             ));
         }
 
-        // Find or create the role
         Role role = roleRepository.findFirstByNameOrderByIdAsc(roleName.toUpperCase()).orElseGet(() -> {
             Role newRole = new Role();
+            newRole.setId(System.currentTimeMillis());
             newRole.setName(roleName.toUpperCase());
             newRole.setDescriptions(roleName.toUpperCase() + " role");
             return roleRepository.save(newRole);
@@ -104,6 +102,7 @@ public class AuthController {
 
         // Create the user
         User user = new User();
+        user.setId(System.currentTimeMillis());
         user.setUsername(username);
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
@@ -112,7 +111,6 @@ public class AuthController {
 
         User savedUser = userRepository.save(user);
 
-        // Auto-login: generate JWT token immediately
         final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         final String jwt = jwtUtil.generateToken(userDetails);
 

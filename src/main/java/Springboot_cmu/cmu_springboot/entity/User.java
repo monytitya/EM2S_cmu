@@ -1,14 +1,14 @@
 package Springboot_cmu.cmu_springboot.entity;
 
 import jakarta.persistence.*;
+import org.springframework.data.domain.Persistable;
 import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "\"user\"")
-public class User {
+public class User implements Persistable<Long> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true, length = 50)
@@ -30,6 +30,9 @@ public class User {
     @Column(name = "last_login")
     private OffsetDateTime lastLogin;
 
+    @Transient
+    private boolean isNewEntity = true;
+
     public User() {}
 
     public User(Long id, String username, String email, String password, Role role, Boolean isActive, OffsetDateTime lastLogin) {
@@ -42,12 +45,24 @@ public class User {
         this.lastLogin = lastLogin;
     }
 
+    @Override
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    @Override
+    public boolean isNew() {
+        return isNewEntity;
+    }
+
+    @PostLoad
+    @PostPersist
+    public void markNotNew() {
+        this.isNewEntity = false;
     }
 
     public String getUsername() {

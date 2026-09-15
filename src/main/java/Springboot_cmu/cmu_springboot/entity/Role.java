@@ -1,13 +1,13 @@
 package Springboot_cmu.cmu_springboot.entity;
 
 import jakarta.persistence.*;
+import org.springframework.data.domain.Persistable;
 
 @Entity
 @Table(name = "\"role\"")
-public class Role {
+public class Role implements Persistable<Long> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, length = 50)
@@ -21,6 +21,9 @@ public class Role {
     @JoinColumn(name = "role_id")
     private Role parentRole;
 
+    @Transient
+    private boolean isNewEntity = true;
+
     public Role() {}
 
     public Role(Long id, String name, String descriptions, Role parentRole) {
@@ -30,12 +33,24 @@ public class Role {
         this.parentRole = parentRole;
     }
 
+    @Override
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    @Override
+    public boolean isNew() {
+        return isNewEntity;
+    }
+
+    @PostLoad
+    @PostPersist
+    public void markNotNew() {
+        this.isNewEntity = false;
     }
 
     public String getName() {
