@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { catchError, map, of, startWith, Subject, switchMap } from 'rxjs';
 import { Api, ResourceRecord } from '../../services/api';
+import { resourceConfigs } from '../../app.routes';
 
 interface ResourceConfig { title: string; eyebrow: string; description: string; resource: string; columns: { key: string; label: string }[]; }
 
@@ -18,7 +19,7 @@ export class ResourcePage {
   private readonly api = inject(Api);
   private readonly route = inject(ActivatedRoute);
   private readonly refresh$ = new Subject<void>();
-  readonly config$ = this.route.data.pipe(map((data) => data['resource'] as ResourceConfig));
+  readonly config$ = this.route.paramMap.pipe(map((params) => resourceConfigs[params.get('resourceType') || ''] as ResourceConfig));
   readonly state$ = this.config$.pipe(
     switchMap((config) => this.refresh$.pipe(
       startWith(void 0),
