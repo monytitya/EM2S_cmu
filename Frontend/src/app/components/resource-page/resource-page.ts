@@ -1,16 +1,14 @@
-import { AsyncPipe, LowerCasePipe, NgFor, NgIf, SlicePipe } from '@angular/common';
+import { AsyncPipe, CurrencyPipe, LowerCasePipe, NgFor, NgIf, SlicePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { catchError, map, of, startWith, Subject, switchMap } from 'rxjs';
+import { catchError, filter, map, of, startWith, Subject, switchMap } from 'rxjs';
 import { Api, ResourceRecord } from '../../services/api';
-import { resourceConfigs } from '../../app.routes';
-
-interface ResourceConfig { title: string; eyebrow: string; description: string; resource: string; columns: { key: string; label: string }[]; }
+import { ResourceConfig, resourceConfigs } from '../../app.routes';
 
 @Component({
-  imports: [AsyncPipe, FormsModule, LowerCasePipe, NgFor, NgIf, SlicePipe],
+  imports: [AsyncPipe, CurrencyPipe, FormsModule, LowerCasePipe, NgFor, NgIf, SlicePipe],
   selector: 'app-resource-page',
   styleUrl: './resource-page.css',
   templateUrl: './resource-page.html',
@@ -19,30 +17,51 @@ export class ResourcePage {
   private readonly api = inject(Api);
   private readonly route = inject(ActivatedRoute);
   private readonly refresh$ = new Subject<void>();
-  readonly config$ = this.route.paramMap.pipe(map((params) => resourceConfigs[params.get('resourceType') || ''] as ResourceConfig));
-  readonly state$ = this.config$.pipe(
-    switchMap((config) => this.refresh$.pipe(
-      startWith(void 0),
-      switchMap(() => this.api.list(config.resource)),
-      map((records) => ({ records, loading: false, error: false })),
-      catchError(() => of({ records: [], loading: false, error: true })),
-      startWith({ records: [], loading: true, error: false }),
-    )),
+
+  readonly config$ = this.route.paramMap.pipe(
+    map((params) => resourceConfigs[params.get('resourceType') || ''] as ResourceConfig | undefined),
   );
+
+  readonly state$ = this.config$.pipe(
+    filter((config): config is ResourceConfig => !!config),
+    switchMap((config) =>
+      this.refresh$.pipe(
+        startWith(void 0),
+        switchMap(() => this.api.list(config.resource)),
+        map((records) => ({ records, loading: false, error: false })),
+        catchError(() => of({ records: [], loading: false, error: true })),
+        startWith({ records: [], loading: true, error: false }),
+      ),
+    ),
+  );
+
   query = '';
   modalOpen = false;
-  editingId: number | null = null;
+  editingId: number | string | null = null;
   formError = '';
-  employeeForm = this.emptyEmployee();
+  formData: Record<string, unknown> = {};
+  currentConfig: ResourceConfig | null = null;
 
-  emptyEmployee(): Record<string, unknown> {
-    return { employeeCode: '', firstName: '', lastName: '', gender: '', dob: '', phone: '', address: '', departmentId: '', positionId: '', imageUrl: '' };
+  /** Build an empty form from the field definitions */
+  emptyForm(config: ResourceConfig): Record<string, unknown> {
+    const form: Record<string, unknown> = {};
+    for (const field of config.fields) {
+      if (field.type === 'select' && field.options?.length) {
+        form[field.key] = field.options[0].value;
+      } else {
+        form[field.key] = '';
+      }
+    }
+    return form;
   }
 
-  openEditor(record?: ResourceRecord): void {
+  /** Open the Create / Edit modal */
+  openEditor(config: ResourceConfig, record?: ResourceRecord): void {
+    this.currentConfig = config;
     this.formError = '';
-    this.editingId = record?.['id'] as number | null ?? null;
-    this.employeeForm = record ? { ...this.emptyEmployee(), ...record } : this.emptyEmployee();
+    const idKey = config.idKey || 'id';
+    this.editingId = record ? (record[idKey] as number | string | null) ?? null : null;
+    this.formData = record ? { ...this.emptyForm(config), ...record } : this.emptyForm(config);
     this.modalOpen = true;
   }
 
@@ -51,7 +70,8 @@ export class ResourcePage {
     this.formError = '';
   }
 
-  handleImageSelected(event: Event): void {
+  /** Handle PNG image selection */
+  handleImageSelected(event: Event, fieldKey: string): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
@@ -65,72 +85,81 @@ export class ResourcePage {
       input.value = '';
       return;
     }
-
     const reader = new FileReader();
     reader.onload = () => {
-      this.employeeForm['imageUrl'] = String(reader.result || '');
+      this.formData[fieldKey] = String(reader.result || '');
       this.formError = '';
     };
     reader.readAsDataURL(file);
   }
 
-  saveEmployee(): void {
-    const employeeCode = Number(this.employeeForm['employeeCode']);
-    const firstName = String(this.employeeForm['firstName'] || '').trim();
-    const lastName = String(this.employeeForm['lastName'] || '').trim();
-    if (!Number.isInteger(employeeCode) || employeeCode <= 0) {
-      this.formError = 'Employee code is required and must be a positive whole number.';
-      return;
-    }
-    if (!firstName || !lastName) {
-      this.formError = 'First name and last name are required.';
-      return;
-    }
+  /** Generic save – works for all resource types */
+  saveRecord(): void {
+    const config = this.currentConfig;
+    if (!config) return;
 
-    this.api.list('employees').subscribe({
-      next: (records) => {
-        const duplicate = records.some((record) => Number(record['employeeCode']) === employeeCode && record['id'] !== this.editingId);
-        if (duplicate) {
-          this.formError = 'Employee code already exists. Enter a different code.';
+    // Validate required fields
+    for (const field of config.fields) {
+      if (field.required) {
+        const value = this.formData[field.key];
+        if (value === '' || value === null || value === undefined) {
+          this.formError = `${field.label} is required.`;
           return;
         }
+      }
+    }
 
-        const payload = { ...this.employeeForm, employeeCode, firstName, lastName };
-        const request = this.editingId === null
-          ? this.api.create('employees', payload)
-          : this.api.update('employees', this.editingId, payload);
-        request.subscribe({
-          next: () => {
-            this.closeEditor();
-            this.refresh$.next();
-          },
-          error: (error: HttpErrorResponse) => {
-            this.formError = error.status === 409
-              ? String(error.error?.message || 'Employee code already exists.')
-              : 'Unable to save the employee. Check your data and permissions.';
-          },
-        });
+    // Coerce numeric fields
+    const payload: Record<string, unknown> = { ...this.formData };
+    for (const field of config.fields) {
+      if (field.type === 'number' && payload[field.key] !== '' && payload[field.key] !== null && payload[field.key] !== undefined) {
+        payload[field.key] = Number(payload[field.key]);
+      }
+      // Append timezone for datetime fields
+      if (field.type === 'datetime' && typeof payload[field.key] === 'string' && payload[field.key] && !(payload[field.key] as string).endsWith('Z')) {
+        payload[field.key] = payload[field.key] + ':00Z';
+      }
+    }
+
+    const idKey = config.idKey || 'id';
+    const request = this.editingId === null
+      ? this.api.create(config.resource, payload)
+      : this.api.update(config.resource, this.editingId as number, payload);
+
+    request.subscribe({
+      next: () => {
+        this.closeEditor();
+        this.refresh$.next();
       },
-      error: () => { this.formError = 'Unable to validate the employee code. Try again.'; },
+      error: (error: HttpErrorResponse) => {
+        this.formError = error.status === 409
+          ? String(error.error?.message || 'A record with this data already exists.')
+          : `Unable to save. ${error.error?.message || 'Check your data and try again.'}`;
+      },
     });
   }
 
-  deleteEmployee(record: ResourceRecord): void {
-    const id = record['id'];
-    if (typeof id !== 'number' || !window.confirm(`Delete ${this.display(record, 'firstName')} ${this.display(record, 'lastName')}?`)) return;
-    this.api.remove('employees', id).subscribe({
+  /** Generic delete – works for all resource types */
+  deleteRecord(config: ResourceConfig, record: ResourceRecord): void {
+    const idKey = config.idKey || 'id';
+    const id = record[idKey];
+    const name = config.displayName ? config.displayName(record) : `Record #${id}`;
+    if (id === null || id === undefined || !window.confirm(`Delete ${name}?`)) return;
+    this.api.remove(config.resource, id as number).subscribe({
       next: () => this.refresh$.next(),
-      error: () => { this.formError = 'Unable to delete the employee.'; },
+      error: () => { this.formError = `Unable to delete ${name}.`; },
     });
   }
 
+  /** Filter records by search query */
   visible(records: ResourceRecord[]): ResourceRecord[] {
-    const query = this.query.trim().toLowerCase();
-    return query ? records.filter((record) => JSON.stringify(record).toLowerCase().includes(query)) : records;
+    const q = this.query.trim().toLowerCase();
+    return q ? records.filter((r) => JSON.stringify(r).toLowerCase().includes(q)) : records;
   }
 
+  /** Safely display a field value */
   display(record: ResourceRecord, key: string): string {
     const value = record[key];
-    return value === null || value === undefined || value === '' ? '-' : String(value);
+    return value === null || value === undefined || value === '' ? '–' : String(value);
   }
 }
