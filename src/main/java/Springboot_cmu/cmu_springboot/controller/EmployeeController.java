@@ -6,10 +6,12 @@ import Springboot_cmu.cmu_springboot.repository.EmployeeRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.context.annotation.Profile;
 
 import java.util.List;
 
 @RestController
+@Profile({"employee-service", "default"})
 @RequestMapping("/api/employees")
 public class EmployeeController {
 
@@ -74,4 +76,3 @@ public class EmployeeController {
         }).orElse(ResponseEntity.notFound().build());
     }
 }
-

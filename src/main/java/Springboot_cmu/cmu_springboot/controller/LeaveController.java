@@ -5,10 +5,12 @@ import Springboot_cmu.cmu_springboot.repository.LeaveRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.context.annotation.Profile;
 
 import java.util.List;
 
 @RestController
+@Profile({"leave-service", "default"})
 @RequestMapping("/api/leaves")
 public class LeaveController {
 
@@ -59,4 +61,3 @@ public class LeaveController {
         }).orElse(ResponseEntity.notFound().build());
     }
 }
-

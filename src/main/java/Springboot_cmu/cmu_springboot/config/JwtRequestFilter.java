@@ -1,6 +1,5 @@
 package Springboot_cmu.cmu_springboot.config;
 
-import Springboot_cmu.cmu_springboot.services.CustomUserDetailsService;
 import Springboot_cmu.cmu_springboot.util.JwtUtil;
 
 import jakarta.servlet.FilterChain;
@@ -10,24 +9,20 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
 
-    private final CustomUserDetailsService userDetailsService;
     private final JwtUtil jwtUtil;
 
-    public JwtRequestFilter(
-            CustomUserDetailsService userDetailsService,
-            JwtUtil jwtUtil
-    ) {
-        this.userDetailsService = userDetailsService;
+    public JwtRequestFilter(JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
     }
 
@@ -74,52 +69,18 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             }
         }
 
-        if (username != null
-                && SecurityContextHolder
-                .getContext()
-                .getAuthentication() == null) {
-
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-
-                UserDetails userDetails =
-                        userDetailsService
-                                .loadUserByUsername(username);
-
-                if (jwtUtil.validateToken(jwt, userDetails)) {
-
-                    UsernamePasswordAuthenticationToken authenticationToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
-
-                    authenticationToken.setDetails(
-                            new WebAuthenticationDetailsSource()
-                                    .buildDetails(request)
-                    );
-
-              
-                    SecurityContextHolder
-                            .getContext()
-                            .setAuthentication(
-                                    authenticationToken
-                            );
-
-                    logger.debug(
-                            "JWT authentication successful for user: "
-                            + username
-                    );
+                if (!jwtUtil.isTokenExpired(jwt)) {
+                    var authorities = jwtUtil.extractRoles(jwt).stream()
+                            .map(SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList());
+                    var authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
-
             } catch (Exception e) {
-
-                logger.warn(
-                        "JWT authentication failed for user "
-                        + username
-                        + ": "
-                        + e.getMessage()
-                );
+                logger.warn("JWT authentication failed: " + e.getMessage());
             }
         }
 

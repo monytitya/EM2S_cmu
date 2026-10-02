@@ -15,10 +15,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.context.annotation.Profile;
 
 import java.util.Map;
 
 @RestController
+@Profile({"auth-service", "default"})
 @RequestMapping("/api/auth")
 public class AuthController {
 
@@ -71,7 +73,7 @@ public class AuthController {
         String username = request.get("username");
         String email = request.get("email");
         String password = request.get("password");
-        String roleName = request.getOrDefault("role", "USER"); 
+        String roleName = "USER";
 
         // Validate inputs
         if (username == null || email == null || password == null) {

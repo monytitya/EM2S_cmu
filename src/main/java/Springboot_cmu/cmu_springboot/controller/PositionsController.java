@@ -5,10 +5,12 @@ import Springboot_cmu.cmu_springboot.repository.PositionsRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.context.annotation.Profile;
 
 import java.util.List;
 
 @RestController
+@Profile({"employee-service", "default"})
 @RequestMapping("/api/positions")
 public class PositionsController {
 
@@ -60,4 +62,3 @@ public class PositionsController {
         }).orElse(ResponseEntity.notFound().build());
     }
 }
-

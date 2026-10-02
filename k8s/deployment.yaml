@@ -1,22 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cmu-springboot
+  name: auth-service
   labels:
-    app: cmu-springboot
-    component: api
+    app: auth-service
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: cmu-springboot
+      app: auth-service
   template:
     metadata:
       labels:
-        app: cmu-springboot
+        app: auth-service
     spec:
       containers:
-        - name: cmu-springboot
+        - name: auth-service
           image: cmu-springboot:local
           imagePullPolicy: Never
           ports:
@@ -27,7 +26,11 @@ spec:
                 name: cmu-springboot-config
             - secretRef:
                 name: cmu-springboot-secret
-         
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: auth-service
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-auth:5432/authdb
           startupProbe:
             httpGet:
               path: /swagger-ui.html
@@ -38,37 +41,247 @@ spec:
             httpGet:
               path: /swagger-ui.html
               port: http
-            initialDelaySeconds: 30
             periodSeconds: 10
             failureThreshold: 6
           livenessProbe:
             httpGet:
               path: /swagger-ui.html
               port: http
-            initialDelaySeconds: 60
             periodSeconds: 20
             failureThreshold: 3
           resources:
             requests:
-              cpu: 200m
+              cpu: 100m
               memory: 256Mi
             limits:
               cpu: 500m
               memory: 512Mi
-      restartPolicy: Always
-
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: cmu-springboot
-  labels:
-    app: cmu-springboot
+  name: auth-service
 spec:
   type: ClusterIP
   selector:
-    app: cmu-springboot
+    app: auth-service
   ports:
     - name: http
       port: 9090
-      targetPort: 9090
-  
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: employee-service
+  labels:
+    app: employee-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: employee-service
+  template:
+    metadata:
+      labels:
+        app: employee-service
+    spec:
+      containers:
+        - name: employee-service
+          image: cmu-springboot:local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9090
+              name: http
+          envFrom:
+            - configMapRef:
+                name: cmu-springboot-config
+            - secretRef:
+                name: cmu-springboot-secret
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: employee-service
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-employee:5432/employeedb
+          startupProbe:
+            httpGet:
+              path: /swagger-ui.html
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /swagger-ui.html
+              port: http
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /swagger-ui.html
+              port: http
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: employee-service
+spec:
+  type: ClusterIP
+  selector:
+    app: employee-service
+  ports:
+    - name: http
+      port: 9090
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: leave-service
+  labels:
+    app: leave-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: leave-service
+  template:
+    metadata:
+      labels:
+        app: leave-service
+    spec:
+      containers:
+        - name: leave-service
+          image: cmu-springboot:local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9090
+              name: http
+          envFrom:
+            - configMapRef:
+                name: cmu-springboot-config
+            - secretRef:
+                name: cmu-springboot-secret
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: leave-service
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-leave:5432/leavedb
+          startupProbe:
+            httpGet:
+              path: /swagger-ui.html
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /swagger-ui.html
+              port: http
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /swagger-ui.html
+              port: http
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: leave-service
+spec:
+  type: ClusterIP
+  selector:
+    app: leave-service
+  ports:
+    - name: http
+      port: 9090
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payroll-service
+  labels:
+    app: payroll-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: payroll-service
+  template:
+    metadata:
+      labels:
+        app: payroll-service
+    spec:
+      containers:
+        - name: payroll-service
+          image: cmu-springboot:local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9090
+              name: http
+          envFrom:
+            - configMapRef:
+                name: cmu-springboot-config
+            - secretRef:
+                name: cmu-springboot-secret
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: payroll-service
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-payroll:5432/payrolldb
+          startupProbe:
+            httpGet:
+              path: /swagger-ui.html
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /swagger-ui.html
+              port: http
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /swagger-ui.html
+              port: http
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payroll-service
+spec:
+  type: ClusterIP
+  selector:
+    app: payroll-service
+  ports:
+    - name: http
+      port: 9090
+      targetPort: http

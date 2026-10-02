@@ -5,10 +5,12 @@ import Springboot_cmu.cmu_springboot.repository.RoleRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.context.annotation.Profile;
 
 import java.util.List;
 
 @RestController
+@Profile({"auth-service", "default"})
 @RequestMapping("/api/roles")
 public class RoleController {
 
@@ -60,4 +62,3 @@ public class RoleController {
         }).orElse(ResponseEntity.notFound().build());
     }
 }
-

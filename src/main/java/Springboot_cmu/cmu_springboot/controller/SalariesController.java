@@ -5,10 +5,12 @@ import Springboot_cmu.cmu_springboot.repository.SalariesRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.context.annotation.Profile;
 
 import java.util.List;
 
 @RestController
+@Profile({"payroll-service", "default"})
 @RequestMapping("/api/salaries")
 public class SalariesController {
 
@@ -58,4 +60,3 @@ public class SalariesController {
         }).orElse(ResponseEntity.notFound().build());
     }
 }
-

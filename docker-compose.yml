@@ -1,54 +1,125 @@
 services:
-  app:
+  auth-service:
     build: .
-    container_name: cmuspringboot_app
     depends_on:
-      - postgres
+      postgres-auth:
+        condition: service_healthy
     ports:
-      - "${APP_PORT:-9090}:9090"
+      - "9090:9090"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:${DB_PORT:-5432}/postgres
+      SPRING_PROFILES_ACTIVE: auth-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/authdb
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_DOC_SWAGGER_UI_PATH: /swagger-ui.html
-    networks:
-      - db
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a base64-encoded 32-byte key}
+      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
 
-  postgres:
-    image: postgres:latest
-    container_name: container_postgres
+  employee-service:
+    build: .
+    depends_on:
+      postgres-employee:
+        condition: service_healthy
+    ports:
+      - "9091:9090"
+    environment:
+      SPRING_PROFILES_ACTIVE: employee-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-employee:5432/employeedb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a base64-encoded 32-byte key}
+
+  leave-service:
+    build: .
+    depends_on:
+      postgres-leave:
+        condition: service_healthy
+    ports:
+      - "9092:9090"
+    environment:
+      SPRING_PROFILES_ACTIVE: leave-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-leave:5432/leavedb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a base64-encoded 32-byte key}
+
+  payroll-service:
+    build: .
+    depends_on:
+      postgres-payroll:
+        condition: service_healthy
+    ports:
+      - "9093:9090"
+    environment:
+      SPRING_PROFILES_ACTIVE: payroll-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-payroll:5432/payrolldb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a base64-encoded 32-byte key}
+
+  postgres-auth:
+    image: postgres:16-alpine
     restart: unless-stopped
     environment:
+      POSTGRES_DB: authdb
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      PGDATA: /data/postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
-      - db:/data/postgres
-    ports:
-      - "${DB_PORT:-5432}:5432"
-    networks:
-      - db
+      - auth-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d authdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: cmuspring_pgAdmin
-    restart: always
+  postgres-employee:
+    image: postgres:16-alpine
+    restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@rac.gov.kh
-      PGADMIN_DEFAULT_PASSWORD: admin@rac.gov.kh
-    ports:
-      - "8081:80"
-    depends_on:
-      - postgres
+      POSTGRES_DB: employeedb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
-      - db:/data/pgadmin
-    networks:
-      - db
+      - employee-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d employeedb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-networks:
-  db:
-    driver: bridge
+  postgres-leave:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: leavedb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - leave-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d leavedb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres-payroll:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: payrolldb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - payroll-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d payrolldb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
-  db:
+  auth-db:
+  employee-db:
+  leave-db:
+  payroll-db:
