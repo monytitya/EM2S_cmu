@@ -54,3 +54,18 @@ kubectl apply -f k8s/configmap.yaml -f k8s/secret.yaml -f k8s/postgres.yaml -f k
 The new databases start empty. Back up and migrate existing PostgreSQL records
 into their owning service database before switching a production deployment
 over to these routes.
+
+Wait for the service deployment to become ready before forwarding a port.
+Forwarding to a pod while Spring Boot is starting or restarting can fail with
+`connect: connection refused`, even when the Service and container both use
+port `9090`:
+
+```powershell
+kubectl rollout status deployment/auth-service --timeout=5m
+kubectl port-forward service/auth-service 9090:9090
+```
+
+The current manifests define `auth-service`, `employee-service`,
+`leave-service`, and `payroll-service`; they do not define the older
+`cmu-springboot` Service. Use the matching service and deployment name when
+forwarding another API.
