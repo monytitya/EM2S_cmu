@@ -33,9 +33,11 @@ docker compose up --build
 ```
 
 The services are available on ports 9090–9093 (identity, employees, leave, and
-payroll, respectively). The Angular app routes local API requests to those
-ports; when hosted behind the Kubernetes Ingress it uses the same host and
-path-based routing.
+payroll, respectively). By default, the Angular development server proxies
+`/api` requests to the combined Spring Boot API on port 9090, keeping browser
+requests same-origin. To use the separate local services, open the frontend
+with `?apiMode=microservices` in its URL. When hosted behind the Kubernetes
+Ingress, the app uses the same host and path-based routing.
 
 ## Deploy to Kubernetes
 

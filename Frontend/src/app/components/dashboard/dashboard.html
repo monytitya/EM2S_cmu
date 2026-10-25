@@ -1,54 +1,102 @@
 <section class="dashboard-page">
-	<header class="page-heading"><div><p class="eyebrow">People intelligence</p><h1>HR Analytics Dashboard</h1><p class="subtitle">Employee overview and workforce insights</p></div><div class="heading-actions"><label class="select-wrap">Date range <select><option>Jan 2023 - Dec 2023</option><option>Last 30 days</option></select></label><button class="icon-button" type="button" aria-label="Export dashboard">↗</button></div></header>
-	<ng-container *ngIf="dashboard$ | async as dashboard">
-		<p class="data-note" *ngIf="dashboard.usingDemoData">Showing a preview while employee data loads.</p>
-		<div class="kpi-grid">
-			<article class="kpi-card"><span class="kpi-icon blue">♙</span><div><span>Total employees</span><strong>{{ dashboard.employees.length | number }}</strong><small>Live employee records</small></div></article>
-			<article class="kpi-card"><span class="kpi-icon green">⌂</span><div><span>Departments</span><strong>{{ countByDepartment(dashboard.employees).length }}</strong><small>Across current records</small></div></article>
-			<article class="kpi-card"><span class="kpi-icon coral">₹</span><div><span>Payroll coverage</span><strong>{{ countWithPayroll(dashboard.employees) }}</strong><small>Employees with net pay</small></div></article>
-			<article class="kpi-card"><span class="kpi-icon pink">◌</span><div><span>Leave tracked</span><strong>{{ countWithLeave(dashboard.employees) }}</strong><small>Employees with leave data</small></div></article>
-			<article class="kpi-card"><span class="kpi-icon teal">₹</span><div><span>Avg salary</span><strong>{{ averageSalary(dashboard.employees) | currency:'INR':'symbol':'1.0-0' }}</strong><small>From available salary data</small></div></article>
-			<article class="kpi-card"><span class="kpi-icon amber">✓</span><div><span>Data status</span><strong>{{ dashboard.usingDemoData ? 'Preview' : 'Live' }}</strong><small>{{ dashboard.usingDemoData ? 'API data unavailable' : 'Connected to API' }}</small></div></article>
-		</div>
-		<div class="main-grid">
-			<article class="panel trend-panel"><div class="panel-heading"><div><h2>Employees trend over time</h2><span class="muted">Headcount by month</span></div><button class="more-button" aria-label="More trend options">⋮</button></div><div class="trend-chart"><div class="axis-labels"><span>1,600</span><span>1,200</span><span>800</span><span>400</span><span>0</span></div><div class="line-area"><svg viewBox="0 0 600 190" role="img" aria-label="Employee count trends upward throughout the year"><path class="area" d="M0 145 L50 135 L100 128 L150 113 L200 105 L250 82 L300 88 L350 77 L400 94 L450 59 L500 69 L550 55 L600 24 L600 190 L0 190 Z"/><polyline points="0,145 50,135 100,128 150,113 200,105 250,82 300,88 350,77 400,94 450,59 500,69 550,55 600,24"/></svg><div class="month-labels"><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span></div></div></div></article>
-			<article class="panel"><div class="panel-heading"><h2>Employees by department</h2><button class="more-button" aria-label="More department options">⋮</button></div><div class="donut-layout"><div class="donut"><strong>{{ dashboard.employees.length }}</strong><span>Total employees</span></div><ul class="legend"><li *ngFor="let department of countByDepartment(dashboard.employees); let i = index"><i [class]="'dot dot-' + i"></i>{{ department.name }} <b>{{ department.value }}</b></li></ul></div></article>
-			<article class="panel"><div class="panel-heading"><h2>Employees by job role</h2><button class="more-button" aria-label="More role options">⋮</button></div><div class="bars"><div *ngFor="let role of countByRole(dashboard.employees)" class="bar-row"><span>{{ role.name }}</span><div><i [style.width.%]="role.value / (dashboard.employees.length || 1) * 100"></i></div><b>{{ role.value }}</b></div><p class="muted" *ngIf="!dashboard.employees.length">No role data available yet.</p></div></article>
-		</div>
-		<div class="lower-grid">
-			<article class="panel">
-				<div class="panel-heading"><h2>Employees by department</h2><button class="more-button" aria-label="More employee options">⋮</button></div>
-				<div class="column-chart">
-					<div *ngFor="let item of countByDepartment(dashboard.employees); let i = index" class="column">
-						<b [style.height.%]="100 - i * 13">{{ item.value }}</b>
-						<span>{{ item.name }}</span>
-					</div>
-				</div>
-			</article>
-			<article class="panel">
-				<div class="panel-heading"><h2>Attrition rate by department</h2><button class="more-button" aria-label="More rate options">⋮</button></div>
-				<div class="rate-list">
-					<div *ngFor="let rate of [{name:'R&D', value:22.3},{name:'HR',value:17.8},{name:'Technology',value:15.2},{name:'Operations',value:13.9},{name:'Finance',value:12.7},{name:'Sales',value:11.9}]">
-						<span>{{ rate.name }}</span>
-						<div><i [style.width.%]="rate.value * 4"></i></div>
-						<b>{{ rate.value }}%</b>
-					</div>
-				</div>
-			</article>
-			<article class="panel">
-				<div class="panel-heading"><h2>Employees by age group</h2><button class="more-button" aria-label="More age options">⋮</button></div>
-				<div class="age-content">
-					<div class="donut age-donut"><strong>{{ dashboard.employees.length | number }}</strong><span>Total</span></div>
-					<ul class="legend">
-						<li><i class="dot dot-0"></i>18 - 25 <b>234</b></li>
-						<li><i class="dot dot-1"></i>26 - 35 <b>750</b></li>
-						<li><i class="dot dot-2"></i>36 - 45 <b>345</b></li>
-						<li><i class="dot dot-3"></i>46 - 55 <b>126</b></li>
-					</ul>
-				</div>
-			</article>
-		</div>
-		<footer class="insight-strip"><div><span class="insight-icon blue">♙</span><p>Total headcount increased by <b>5.6%</b> compared to last year.</p></div><div><span class="insight-icon pink">⌁</span><p>Attrition rate increased by <b>1.8%</b> compared to last year.</p></div><div><span class="insight-icon green">✿</span><p>Sales department has highest attrition rate at <b>22.3%</b>.</p></div><div><span class="insight-icon coral">↗</span><p>Most employees <b>(50%)</b> fall in 26-35 age group.</p></div></footer>
-    <div class="detail-grid"><article class="panel"><div class="panel-heading"><h2>Gender diversity</h2><button class="more-button" aria-label="More gender options">⋮</button></div><div class="compact-visual"><div class="donut gender-donut"><strong>1,470</strong><span>Total</span></div><ul class="legend"><li><i class="dot dot-0"></i>Male <b>882 (60%)</b></li><li><i class="dot dot-3"></i>Female <b>588 (40%)</b></li></ul></div></article><article class="panel"><div class="panel-heading"><h2>Education field</h2><button class="more-button" aria-label="More education options">⋮</button></div><div class="education-list"><div><span>Engineering</span><i style="width:82%"></i><b>45.3%</b></div><div><span>Business Mgmt.</span><i style="width:53%"></i><b>20.7%</b></div><div><span>Computer Science</span><i style="width:49%"></i><b>15.8%</b></div><div><span>Commerce</span><i style="width:27%"></i><b>9.8%</b></div><div><span>Others</span><i style="width:24%"></i><b>8.6%</b></div></div></article><article class="panel"><div class="panel-heading"><h2>Tenure distribution</h2><button class="more-button" aria-label="More tenure options">⋮</button></div><div class="compact-visual"><div class="donut tenure-donut"><strong>1,470</strong><span>Total</span></div><ul class="legend"><li><i class="dot dot-0"></i>&lt; 1 year <b>246</b></li><li><i class="dot dot-1"></i>1 - 3 years <b>535</b></li><li><i class="dot dot-2"></i>4 - 7 years <b>425</b></li><li><i class="dot dot-3"></i>8 - 10 years <b>182</b></li></ul></div></article><article class="panel"><div class="panel-heading"><h2>Job satisfaction rating</h2><button class="more-button" aria-label="More satisfaction options">⋮</button></div><div class="satisfaction-list"><div><b>5</b><i style="width:88%"></i><span>35.6%</span></div><div><b>4</b><i style="width:71%"></i><span>28.9%</span></div><div><b>3</b><i style="width:51%"></i><span>20.1%</span></div><div><b>2</b><i style="width:24%"></i><span>9.3%</span></div><div><b>1</b><i style="width:16%"></i><span>6.1%</span></div></div></article></div>
-	</ng-container>
+  <ng-container *ngIf="dashboard$ | async as dashboard">
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">People intelligence</p>
+        <h1>HR Operations</h1>
+        <p class="subtitle">A clear overview of your people and departments.</p>
+      </div>
+      <span class="report-period"><span class="status-dot" [class.preview]="dashboard.usingDemoData"></span>{{ dashboard.usingDemoData ? 'Preview data' : 'Live workforce data' }}</span>
+    </header>
+
+    <p class="data-note" *ngIf="dashboard.usingDemoData" role="status">
+      Showing preview data because the employee API is currently unavailable.
+    </p>
+
+    <section class="kpi-grid" aria-label="Workforce summary">
+      <article class="kpi-card">
+        <span class="kpi-icon people-icon" aria-hidden="true">♙</span>
+        <div><span>Total employees</span><strong>{{ dashboard.employees.length | number }}</strong><small>Active workforce records</small></div>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-icon department-icon" aria-hidden="true">▦</span>
+        <div><span>Departments</span><strong>{{ dashboard.departments.length }}</strong><small>Represented in your workforce</small></div>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-icon payroll-icon" aria-hidden="true">₹</span>
+        <div><span>Payroll coverage</span><strong>{{ dashboard.payrollCoverage | number }}</strong><small>Employees with payroll data</small></div>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-icon salary-icon" aria-hidden="true">↗</span>
+        <div><span>Average salary</span><strong>{{ dashboard.averageSalary === undefined ? '—' : (dashboard.averageSalary | currency:'INR':'symbol':'1.0-0') }}</strong><small>Based on available records</small></div>
+      </article>
+    </section>
+
+    <section class="tables-grid" aria-label="Workforce data">
+      <article class="table-panel">
+        <header class="panel-heading">
+          <div>
+            <p class="panel-kicker">PEOPLE</p>
+            <h2>Employee directory</h2>
+            <p class="panel-description">Employee details and latest pay information</p>
+          </div>
+          <a class="panel-link" routerLink="/employees">View all <span aria-hidden="true">→</span></a>
+        </header>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th scope="col">Employee</th><th scope="col">Department</th><th scope="col">Position</th><th scope="col">Net pay</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let employee of dashboard.employees | slice:0:6">
+                <td>
+                  <div class="employee-cell">
+                    <span class="employee-avatar" aria-hidden="true">{{ employee.name.slice(0, 1) }}</span>
+                    <div><strong>{{ employee.name }}</strong><small>ID {{ employee.id }}</small></div>
+                  </div>
+                </td>
+                <td><span class="department-pill">{{ employee.department }}</span></td>
+                <td>{{ employee.position }}</td>
+                <td class="amount">{{ employee.netPay === undefined ? '—' : (employee.netPay | currency:'INR':'symbol':'1.0-0') }}</td>
+              </tr>
+              <tr *ngIf="!dashboard.employees.length"><td class="empty-cell" colspan="4">No employee records to display yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <footer class="panel-footer">Showing {{ dashboard.employees.length > 6 ? 6 : dashboard.employees.length }} of {{ dashboard.employees.length }} employees</footer>
+      </article>
+
+      <article class="table-panel">
+        <header class="panel-heading">
+          <div>
+            <p class="panel-kicker">ORGANIZATION</p>
+            <h2>Department overview</h2>
+            <p class="panel-description">Headcount and average salary by team</p>
+          </div>
+          <a class="panel-link" routerLink="/departments">View all <span aria-hidden="true">→</span></a>
+        </header>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th scope="col">Department</th><th scope="col">Employees</th><th scope="col">Avg. salary</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let department of dashboard.departments">
+                <td>
+                  <div class="department-cell">
+                    <span class="department-icon" aria-hidden="true">{{ department.name.slice(0, 1) }}</span>
+                    <strong>{{ department.name }}</strong>
+                  </div>
+                </td>
+                <td><span class="count-badge">{{ department.employeeCount }}</span></td>
+                <td class="amount">{{ department.averageSalary === undefined ? '—' : (department.averageSalary | currency:'INR':'symbol':'1.0-0') }}</td>
+              </tr>
+              <tr *ngIf="!dashboard.departments.length"><td class="empty-cell" colspan="3">Department data will appear when employees are available.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <footer class="panel-footer">{{ dashboard.departments.length }} departments represented</footer>
+      </article>
+    </section>
+  </ng-container>
 </section>

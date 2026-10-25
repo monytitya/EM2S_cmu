@@ -50,7 +50,11 @@ export class Api {
 		const port = window.location.port ? `:${window.location.port}` : '';
 		const baseHost = `${protocol}//${hostname}${port}`;
 		if (hostname === 'localhost' || hostname === '127.0.0.1') {
-			return `http://localhost:${this.localPorts[service]}/api`;
+			const useMicroservices = new URLSearchParams(window.location.search).get('apiMode') === 'microservices';
+			if (useMicroservices) {
+				return `http://localhost:${this.localPorts[service]}/api`;
+			}
+			return '/api';
 		}
 		return `${baseHost}/api`;
 	}
@@ -72,6 +76,11 @@ export class Api {
 			default:
 				return 'auth';
 		}
+	}
+
+	private request<T>(method: string, resource: string, path: string, body?: unknown): Observable<T> {
+		const url = `${this.getApiBaseUrl(this.resourceService(resource))}/${path}`;
+		return this.http.request<T>(method, url, { body });
 	}
 
 	getEmployeeOverview(): Observable<EmployeeOverview[]> {
@@ -117,16 +126,16 @@ export class Api {
 		return this.http.post<RegisterResponse>(`${this.getApiBaseUrl('auth')}/auth/register`, { username, email, password, role });
 	}
 
-	getUsers(): Observable<UserRecord[]> { return this.http.get<UserRecord[]>(`${this.getApiBaseUrl('auth')}/users`); }
-	createUser(user: Partial<UserRecord> & { password?: string }): Observable<UserRecord> { return this.http.post<UserRecord>(`${this.getApiBaseUrl('auth')}/users`, user); }
-	updateUser(id: number, user: Partial<UserRecord> & { password?: string }): Observable<UserRecord> { return this.http.put<UserRecord>(`${this.getApiBaseUrl('auth')}/users/${id}`, user); }
-	deleteUser(id: number): Observable<void> { return this.http.delete<void>(`${this.getApiBaseUrl('auth')}/users/${id}`); }
+	getUsers(): Observable<UserRecord[]> { return this.request<UserRecord[]>('GET', 'users', 'users'); }
+	createUser(user: Partial<UserRecord> & { password?: string }): Observable<UserRecord> { return this.request<UserRecord>('POST', 'users', 'users', user); }
+	updateUser(id: number, user: Partial<UserRecord> & { password?: string }): Observable<UserRecord> { return this.request<UserRecord>('PUT', 'users', `users/${id}`, user); }
+	deleteUser(id: number): Observable<void> { return this.request<void>('DELETE', 'users', `users/${id}`); }
 
-	list(resource: string): Observable<ResourceRecord[]> { return this.http.get<ResourceRecord[]>(`${this.getApiBaseUrl(this.resourceService(resource))}/${resource}`); }
-	get(resource: string, id: number): Observable<ResourceRecord> { return this.http.get<ResourceRecord>(`${this.getApiBaseUrl(this.resourceService(resource))}/${resource}/${id}`); }
-	create(resource: string, value: ResourceRecord): Observable<ResourceRecord> { return this.http.post<ResourceRecord>(`${this.getApiBaseUrl(this.resourceService(resource))}/${resource}`, value); }
-	update(resource: string, id: number, value: ResourceRecord): Observable<ResourceRecord> { return this.http.put<ResourceRecord>(`${this.getApiBaseUrl(this.resourceService(resource))}/${resource}/${id}`, value); }
-	remove(resource: string, id: number): Observable<void> { return this.http.delete<void>(`${this.getApiBaseUrl(this.resourceService(resource))}/${resource}/${id}`); }
+	list(resource: string): Observable<ResourceRecord[]> { return this.request<ResourceRecord[]>('GET', resource, resource); }
+	get(resource: string, id: number): Observable<ResourceRecord> { return this.request<ResourceRecord>('GET', resource, `${resource}/${id}`); }
+	create(resource: string, value: ResourceRecord): Observable<ResourceRecord> { return this.request<ResourceRecord>('POST', resource, resource, value); }
+	update(resource: string, id: number, value: ResourceRecord): Observable<ResourceRecord> { return this.request<ResourceRecord>('PUT', resource, `${resource}/${id}`, value); }
+	remove(resource: string, id: number): Observable<void> { return this.request<void>('DELETE', resource, `${resource}/${id}`); }
 
 	private numberField(record: ResourceRecord, field: string): number | undefined {
 		const value = record[field];

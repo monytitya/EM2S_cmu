@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Api } from './api';
@@ -17,13 +18,29 @@ describe('Api', () => {
 
   afterEach(() => {
     httpTesting.verify();
+    window.history.replaceState({}, '', '/');
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-  it('routes local resource requests to their owning service', () => {
+  it('routes local resource requests to the combined API by default', () => {
+    service.list('employees').subscribe();
+    httpTesting.expectOne('/api/employees').flush([]);
+
+    service.list('leaves').subscribe();
+    httpTesting.expectOne('/api/leaves').flush([]);
+
+    service.list('payrolls').subscribe();
+    httpTesting.expectOne('/api/payrolls').flush([]);
+
+    service.getUsers().subscribe();
+    httpTesting.expectOne('/api/users').flush([]);
+  });
+
+  it('routes to separate local services when microservice mode is selected', () => {
+    window.history.replaceState({}, '', '/?apiMode=microservices');
     service.list('employees').subscribe();
     httpTesting.expectOne('http://localhost:9091/api/employees').flush([]);
 
@@ -32,12 +49,24 @@ describe('Api', () => {
 
     service.list('payrolls').subscribe();
     httpTesting.expectOne('http://localhost:9093/api/payrolls').flush([]);
+  });
 
-    service.getUsers().subscribe();
-    httpTesting.expectOne('http://localhost:9090/api/users').flush([]);
+  it('surfaces HTTP errors from the combined API without retrying another host', () => {
+    let errorStatus: number | undefined;
+    service.list('employees').subscribe({
+      error: (error: HttpErrorResponse) => errorStatus = error.status,
+    });
+
+    httpTesting.expectOne('/api/employees').flush({}, {
+      status: 500,
+      statusText: 'Server Error',
+    });
+
+    expect(errorStatus).toBe(500);
   });
 
   it('combines dashboard data from all domain services', () => {
+    window.history.replaceState({}, '', '/?apiMode=microservices');
     let overview: unknown;
     service.getEmployeeOverview().subscribe((result) => overview = result);
 

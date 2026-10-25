@@ -1,10 +1,34 @@
-import { AsyncPipe, CurrencyPipe, DecimalPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, CurrencyPipe, DecimalPipe, NgFor, NgIf, SlicePipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { catchError, map, of, startWith } from 'rxjs';
 import { Api, EmployeeOverview } from '../../services/api';
 
+interface DepartmentSummary {
+  name: string;
+  employeeCount: number;
+  averageSalary: number | undefined;
+}
+
+interface DashboardEmployee {
+  id: string;
+  name: string;
+  department: string;
+  position: string;
+  netPay: number | undefined;
+  basicSalary: number | undefined;
+}
+
+interface DashboardData {
+  employees: DashboardEmployee[];
+  departments: DepartmentSummary[];
+  averageSalary: number | undefined;
+  payrollCoverage: number;
+  usingDemoData: boolean;
+}
+
 @Component({
-  imports: [AsyncPipe, CurrencyPipe, DecimalPipe, NgFor, NgIf],
+  imports: [AsyncPipe, CurrencyPipe, DecimalPipe, NgFor, NgIf, RouterLink, SlicePipe],
   selector: 'app-dashboard',
   styleUrl: './dashboard.css',
   templateUrl: './dashboard.html',
@@ -21,39 +45,49 @@ export class Dashboard {
   ];
 
   readonly dashboard$ = this.api.getEmployeeOverview().pipe(
-    map((employees) => ({ employees, usingDemoData: false })),
-    catchError(() => of({ employees: this.demoEmployees, usingDemoData: true })),
-    startWith({ employees: this.demoEmployees, usingDemoData: true }),
+    map((employees) => this.buildDashboardData(employees, false)),
+    catchError(() => of(this.buildDashboardData(this.demoEmployees, true))),
+    startWith(this.buildDashboardData(this.demoEmployees, true)),
   );
 
-  countByDepartment(employees: EmployeeOverview[]): { name: string; value: number }[] {
-    const counts = new Map<string, number>();
-    employees.forEach((employee) => {
+  private buildDashboardData(employees: EmployeeOverview[], usingDemoData: boolean): DashboardData {
+    const departments = new Map<string, { salaries: number[]; employeeCount: number }>();
+
+    const employeeRows = employees.map((employee) => {
       const department = employee.departmentName || 'Unassigned';
-      counts.set(department, (counts.get(department) || 0) + 1);
+      const summary = departments.get(department) || { salaries: [], employeeCount: 0 };
+      summary.employeeCount += 1;
+      if (employee.basicSalary !== undefined) summary.salaries.push(employee.basicSalary);
+      departments.set(department, summary);
+
+      return {
+        id: employee.employeeId === undefined ? '—' : String(employee.employeeId),
+        name: employee.employeeFullName || `Employee #${employee.employeeId ?? '—'}`,
+        department,
+        position: employee.positionTitle || '—',
+        netPay: employee.netPay,
+        basicSalary: employee.basicSalary,
+      };
     });
-    return Array.from(counts, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
-  }
 
-  averageSalary(employees: EmployeeOverview[]): number {
-    const salaries = employees.map((employee) => employee.basicSalary || 0).filter(Boolean);
-    return salaries.length ? salaries.reduce((sum, salary) => sum + salary, 0) / salaries.length : 0;
-  }
+    const departmentRows = Array.from(departments, ([name, summary]) => ({
+      name,
+      employeeCount: summary.employeeCount,
+      averageSalary: summary.salaries.length
+        ? summary.salaries.reduce((total, salary) => total + salary, 0) / summary.salaries.length
+        : undefined,
+    })).sort((a, b) => b.employeeCount - a.employeeCount);
 
-  countWithPayroll(employees: EmployeeOverview[]): number {
-    return employees.filter((employee) => employee.netPay !== undefined).length;
-  }
+    const salaries = employeeRows
+      .map((employee) => employee.basicSalary)
+      .filter((salary): salary is number => salary !== undefined);
 
-  countWithLeave(employees: EmployeeOverview[]): number {
-    return employees.filter((employee) => employee.leaveTotalDays !== undefined).length;
-  }
-
-  countByRole(employees: EmployeeOverview[]): { name: string; value: number }[] {
-    const counts = new Map<string, number>();
-    employees.forEach((employee) => {
-      const role = employee.positionTitle || 'Unassigned';
-      counts.set(role, (counts.get(role) || 0) + 1);
-    });
-    return Array.from(counts, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+    return {
+      employees: employeeRows,
+      departments: departmentRows,
+      averageSalary: salaries.length ? salaries.reduce((total, salary) => total + salary, 0) / salaries.length : undefined,
+      payrollCoverage: employeeRows.filter((employee) => employee.netPay !== undefined).length,
+      usingDemoData,
+    };
   }
 }
