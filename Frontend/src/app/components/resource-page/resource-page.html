@@ -1,4 +1,4 @@
-<section class="resource-page" *ngIf="config$ | async as config">
+<section class="resource-page" [class.leave-page]="config.resource === 'leaves'" *ngIf="config$ | async as config">
   <header class="page-heading">
     <div>
       <p class="eyebrow">{{ config.eyebrow }}</p>
@@ -10,10 +10,25 @@
 
   <div class="toolbar">
     <label class="search-box">⌕ <input [(ngModel)]="query" placeholder="Search {{ config.title | lowercase }}" /></label>
-    <button class="filter-button" type="button">☷ Filters</button>
   </div>
 
   <div class="table-panel" *ngIf="state$ | async as state">
+    <section class="leave-summary" *ngIf="config.resource === 'leaves'" aria-label="Leave summary">
+      <ng-container *ngIf="state.leaveStats as stats">
+        <article class="summary-card">
+          <span class="summary-icon requests-icon" aria-hidden="true">LR</span>
+          <div><p>Total requests</p><strong>{{ stats.requests }}</strong></div>
+        </article>
+        <article class="summary-card">
+          <span class="summary-icon days-icon" aria-hidden="true">D</span>
+          <div><p>Days requested</p><strong>{{ stats.requestedDays }}</strong></div>
+        </article>
+        <article class="summary-card">
+          <span class="summary-icon active-icon" aria-hidden="true">ON</span>
+          <div><p>Employees on leave today</p><strong>{{ stats.employeesOnLeaveToday }}</strong></div>
+        </article>
+      </ng-container>
+    </section>
     <div class="table-status">
       <span>{{ config.title }} <b>{{ visible(state.records).length }}</b></span>
       <span class="state-message" *ngIf="state.loading">Loading data...</span>

@@ -9,6 +9,8 @@ import Springboot_cmu.cmu_springboot.repository.UserRepository;
 import Springboot_cmu.cmu_springboot.services.CustomUserDetailsService;
 import Springboot_cmu.cmu_springboot.util.JwtUtil;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.context.annotation.Profile;
 
 import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @Profile({"auth-service", "default"})
@@ -123,5 +126,71 @@ public class AuthController {
                 "role", role.getName(),
                 "jwt", jwt
         ));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<Map<String, Object>> getCurrentProfile(Authentication authentication) {
+        return userRepository.findByUsername(authentication.getName())
+                .map(user -> ResponseEntity.ok(toProfileMap(user)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<?> updateCurrentProfile(
+            Authentication authentication,
+            @RequestBody Map<String, String> request) {
+        String username = request.getOrDefault("username", "").trim();
+        String email = request.getOrDefault("email", "").trim();
+        if (username.isBlank() || email.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "message", "Username and email are required."
+            ));
+        }
+
+        User user = userRepository.findByUsername(authentication.getName()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        boolean usernameInUse = userRepository.findByUsername(username)
+                .filter(existing -> !existing.getId().equals(user.getId()))
+                .isPresent();
+        if (usernameInUse) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "That username is already in use."
+            ));
+        }
+
+        boolean emailInUse = userRepository.findByEmail(email)
+                .filter(existing -> !existing.getId().equals(user.getId()))
+                .isPresent();
+        if (emailInUse) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "message", "That email address is already in use."
+            ));
+        }
+
+        user.setUsername(username);
+        user.setEmail(email);
+        String password = request.get("password");
+        if (password != null && !password.isBlank()) {
+            user.setPassword(passwordEncoder.encode(password));
+        }
+
+        User savedUser = userRepository.save(user);
+        UserDetails updatedUserDetails = userDetailsService.loadUserByUsername(savedUser.getUsername());
+        Map<String, Object> response = new HashMap<>(toProfileMap(savedUser));
+        response.put("jwt", jwtUtil.generateToken(updatedUserDetails));
+        return ResponseEntity.ok(response);
+    }
+
+    private Map<String, Object> toProfileMap(User user) {
+        return Map.of(
+                "id", user.getId(),
+                "username", user.getUsername(),
+                "email", user.getEmail(),
+                "role", user.getRole() != null ? user.getRole().getName() : "N/A",
+                "isActive", user.getIsActive() != null ? user.getIsActive() : true
+        );
     }
 }

@@ -39,6 +39,49 @@ describe('Api', () => {
     httpTesting.expectOne('/api/users').flush([]);
   });
 
+  it('loads and updates the signed-in user profile through authenticated endpoints', () => {
+    let profile: unknown;
+    service.getCurrentProfile().subscribe((result) => profile = result);
+    httpTesting.expectOne('/api/auth/me').flush({
+      id: 8,
+      username: 'admin',
+      email: 'admin@example.com',
+      role: 'ADMIN',
+      isActive: true,
+    });
+
+    expect(profile).toEqual({
+      id: 8,
+      username: 'admin',
+      email: 'admin@example.com',
+      role: 'ADMIN',
+      isActive: true,
+    });
+
+    let updatedProfile: unknown;
+    service.updateCurrentProfile({ username: 'manager', email: 'manager@example.com' })
+      .subscribe((result) => updatedProfile = result);
+    const request = httpTesting.expectOne('/api/auth/me');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ username: 'manager', email: 'manager@example.com' });
+    request.flush({
+      id: 8,
+      username: 'manager',
+      email: 'manager@example.com',
+      role: 'ADMIN',
+      isActive: true,
+      jwt: 'updated-token',
+    });
+    expect(updatedProfile).toEqual({
+      id: 8,
+      username: 'manager',
+      email: 'manager@example.com',
+      role: 'ADMIN',
+      isActive: true,
+      jwt: 'updated-token',
+    });
+  });
+
   it('routes to separate local services when microservice mode is selected', () => {
     window.history.replaceState({}, '', '/?apiMode=microservices');
     service.list('employees').subscribe();

@@ -23,6 +23,12 @@ export interface UserRecord {
 	isActive: boolean;
 }
 
+export type AccountProfile = UserRecord;
+
+export interface AccountProfileUpdate extends AccountProfile {
+	jwt: string;
+}
+
 export type ResourceRecord = Record<string, unknown>;
 
 export interface LoginResponse { jwt: string; }
@@ -127,6 +133,10 @@ export class Api {
 	}
 
 	getUsers(): Observable<UserRecord[]> { return this.request<UserRecord[]>('GET', 'users', 'users'); }
+	getCurrentProfile(): Observable<AccountProfile> { return this.request<AccountProfile>('GET', 'users', 'auth/me'); }
+	updateCurrentProfile(profile: { username: string; email: string; password?: string }): Observable<AccountProfileUpdate> {
+		return this.request<AccountProfileUpdate>('PUT', 'users', 'auth/me', profile);
+	}
 	createUser(user: Partial<UserRecord> & { password?: string }): Observable<UserRecord> { return this.request<UserRecord>('POST', 'users', 'users', user); }
 	updateUser(id: number, user: Partial<UserRecord> & { password?: string }): Observable<UserRecord> { return this.request<UserRecord>('PUT', 'users', `users/${id}`, user); }
 	deleteUser(id: number): Observable<void> { return this.request<void>('DELETE', 'users', `users/${id}`); }

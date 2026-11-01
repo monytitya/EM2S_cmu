@@ -11,18 +11,57 @@
     <a routerLink="/departments" routerLinkActive="active"><svg lucideBuilding2 size="18"></svg>Departments</a>
     <a routerLink="/salaries" routerLinkActive="active"><svg lucideDollarSign size="18"></svg>Salaries</a>
     <a routerLink="/payroll" routerLinkActive="active"><svg lucideReceipt size="18"></svg>Payroll</a>
-    <a routerLink="/leave" routerLinkActive="active"><svg lucideCalendarClock size="18"></svg>Leave & attendance</a>
+    <a routerLink="/leave" routerLinkActive="active"><svg lucideCalendarClock size="18"></svg>Leave management</a>
     <a routerLink="/leave-types" routerLinkActive="active"><svg lucideClipboardList size="18"></svg>Leave Types</a>
   </nav>
   <div class="sidebar-bottom">
     <a routerLink="/users" routerLinkActive="active"><svg lucideUsers size="18"></svg>Admin users</a>
     <a routerLink="/roles" routerLinkActive="active"><svg lucideShieldCheck size="18"></svg>Roles</a>
-    <div class="profile">
-      <img class="avatar" src="/admin-logo.png" alt="Administrator" />
-      <div>
-        <b>Admin Manager</b>
-        <small>Administrator</small>
-      </div>
-    </div>
+    <button class="profile" type="button" aria-label="Edit your account profile" (click)="openProfile()">
+      <img class="avatar" src="/admin-logo.png" alt="" />
+      <span class="profile-copy">
+        <b>{{ profileLoading ? 'Loading account…' : profile?.username || 'Account unavailable' }}</b>
+        <small>{{ profile?.role || 'Account profile' }}</small>
+      </span>
+      <span class="profile-edit" aria-hidden="true">Edit</span>
+    </button>
   </div>
 </aside>
+
+<div class="profile-backdrop" *ngIf="profileOpen" (click)="closeProfile()">
+  <section class="profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-title" (click)="$event.stopPropagation()">
+    <header class="profile-modal-heading">
+      <div>
+        <p class="profile-modal-eyebrow">ACCOUNT SETTINGS</p>
+        <h2 id="profile-title">Your profile</h2>
+        <p>Update your sign-in details and contact email.</p>
+      </div>
+      <button class="profile-close" type="button" aria-label="Close profile editor" (click)="closeProfile()">×</button>
+    </header>
+
+    <form class="profile-form" (ngSubmit)="saveProfile()">
+      <label>
+        Username
+        <input name="username" [(ngModel)]="profileForm.username" type="text" maxlength="50" required autocomplete="username" />
+      </label>
+      <label>
+        Email address
+        <input name="email" [(ngModel)]="profileForm.email" type="email" maxlength="255" required autocomplete="email" />
+      </label>
+      <label class="profile-role">
+        Role
+        <span>{{ profile?.role || '—' }} <small>Role changes are managed by an administrator.</small></span>
+      </label>
+      <label>
+        New password
+        <input name="password" [(ngModel)]="profileForm.password" type="password" autocomplete="new-password" placeholder="Leave blank to keep your password" />
+      </label>
+      <p class="profile-error" *ngIf="profileError" role="alert">{{ profileError }}</p>
+      <p class="profile-success" *ngIf="profileSuccess" role="status">{{ profileSuccess }}</p>
+      <footer class="profile-actions">
+        <button class="profile-cancel" type="button" [disabled]="savingProfile" (click)="closeProfile()">Cancel</button>
+        <button class="profile-save" type="submit" [disabled]="savingProfile || profileLoading || !profile">{{ savingProfile ? 'Saving…' : 'Save changes' }}</button>
+      </footer>
+    </form>
+  </section>
+</div>

@@ -1,102 +1,115 @@
 <section class="dashboard-page">
   <ng-container *ngIf="dashboard$ | async as dashboard">
-    <header class="page-heading">
+    <header class="dashboard-heading">
       <div>
-        <p class="eyebrow">People intelligence</p>
-        <h1>HR Operations</h1>
-        <p class="subtitle">A clear overview of your people and departments.</p>
+        <p class="eyebrow">WORKFORCE OVERVIEW</p>
+        <h1>Your people, at a glance.</h1>
+        <p class="subtitle">A clearer view of your team, departments, and payroll.</p>
       </div>
-      <span class="report-period"><span class="status-dot" [class.preview]="dashboard.usingDemoData"></span>{{ dashboard.usingDemoData ? 'Preview data' : 'Live workforce data' }}</span>
+      <a class="add-employee" routerLink="/employees"><span aria-hidden="true">+</span> Add employee</a>
     </header>
 
-    <p class="data-note" *ngIf="dashboard.usingDemoData" role="status">
-      Showing preview data because the employee API is currently unavailable.
-    </p>
+    <div class="data-message error-message" *ngIf="dashboard.error" role="alert">{{ dashboard.error }}</div>
+    <div class="data-message loading-message" *ngIf="dashboard.loading" role="status">Loading your workforce overview…</div>
 
-    <section class="kpi-grid" aria-label="Workforce summary">
-      <article class="kpi-card">
-        <span class="kpi-icon people-icon" aria-hidden="true">♙</span>
-        <div><span>Total employees</span><strong>{{ dashboard.employees.length | number }}</strong><small>Active workforce records</small></div>
-      </article>
-      <article class="kpi-card">
-        <span class="kpi-icon department-icon" aria-hidden="true">▦</span>
-        <div><span>Departments</span><strong>{{ dashboard.departments.length }}</strong><small>Represented in your workforce</small></div>
-      </article>
-      <article class="kpi-card">
-        <span class="kpi-icon payroll-icon" aria-hidden="true">₹</span>
-        <div><span>Payroll coverage</span><strong>{{ dashboard.payrollCoverage | number }}</strong><small>Employees with payroll data</small></div>
-      </article>
-      <article class="kpi-card">
-        <span class="kpi-icon salary-icon" aria-hidden="true">↗</span>
-        <div><span>Average salary</span><strong>{{ dashboard.averageSalary === undefined ? '—' : (dashboard.averageSalary | currency:'INR':'symbol':'1.0-0') }}</strong><small>Based on available records</small></div>
-      </article>
-    </section>
-
-    <section class="tables-grid" aria-label="Workforce data">
-      <article class="table-panel">
-        <header class="panel-heading">
-          <div>
-            <p class="panel-kicker">PEOPLE</p>
-            <h2>Employee directory</h2>
-            <p class="panel-description">Employee details and latest pay information</p>
-          </div>
-          <a class="panel-link" routerLink="/employees">View all <span aria-hidden="true">→</span></a>
-        </header>
-        <div class="table-scroll">
-          <table>
-            <thead>
-              <tr><th scope="col">Employee</th><th scope="col">Department</th><th scope="col">Position</th><th scope="col">Net pay</th></tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let employee of dashboard.employees | slice:0:6">
-                <td>
-                  <div class="employee-cell">
-                    <span class="employee-avatar" aria-hidden="true">{{ employee.name.slice(0, 1) }}</span>
-                    <div><strong>{{ employee.name }}</strong><small>ID {{ employee.id }}</small></div>
-                  </div>
-                </td>
-                <td><span class="department-pill">{{ employee.department }}</span></td>
-                <td>{{ employee.position }}</td>
-                <td class="amount">{{ employee.netPay === undefined ? '—' : (employee.netPay | currency:'INR':'symbol':'1.0-0') }}</td>
-              </tr>
-              <tr *ngIf="!dashboard.employees.length"><td class="empty-cell" colspan="4">No employee records to display yet.</td></tr>
-            </tbody>
-          </table>
+    <ng-container *ngIf="!dashboard.loading && !dashboard.error">
+      <section class="welcome-panel" aria-label="Workforce introduction">
+        <div class="welcome-copy">
+          <span class="welcome-label"><span class="live-dot"></span> PEOPLE &amp; CULTURE</span>
+          <h2>Great teams start with a clear picture.</h2>
+          <p>See how your people are distributed and where to focus next.</p>
+          <a routerLink="/employees">Explore your team <span aria-hidden="true">→</span></a>
         </div>
-        <footer class="panel-footer">Showing {{ dashboard.employees.length > 6 ? 6 : dashboard.employees.length }} of {{ dashboard.employees.length }} employees</footer>
-      </article>
-
-      <article class="table-panel">
-        <header class="panel-heading">
-          <div>
-            <p class="panel-kicker">ORGANIZATION</p>
-            <h2>Department overview</h2>
-            <p class="panel-description">Headcount and average salary by team</p>
-          </div>
-          <a class="panel-link" routerLink="/departments">View all <span aria-hidden="true">→</span></a>
-        </header>
-        <div class="table-scroll">
-          <table>
-            <thead>
-              <tr><th scope="col">Department</th><th scope="col">Employees</th><th scope="col">Avg. salary</th></tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let department of dashboard.departments">
-                <td>
-                  <div class="department-cell">
-                    <span class="department-icon" aria-hidden="true">{{ department.name.slice(0, 1) }}</span>
-                    <strong>{{ department.name }}</strong>
-                  </div>
-                </td>
-                <td><span class="count-badge">{{ department.employeeCount }}</span></td>
-                <td class="amount">{{ department.averageSalary === undefined ? '—' : (department.averageSalary | currency:'INR':'symbol':'1.0-0') }}</td>
-              </tr>
-              <tr *ngIf="!dashboard.departments.length"><td class="empty-cell" colspan="3">Department data will appear when employees are available.</td></tr>
-            </tbody>
-          </table>
+        <div class="welcome-stat">
+          <span>TEAM SIZE</span>
+          <strong>{{ dashboard.employees.length | number }}</strong>
+          <small>{{ dashboard.employees.length === 1 ? 'employee' : 'employees' }} in your directory</small>
         </div>
-        <footer class="panel-footer">{{ dashboard.departments.length }} departments represented</footer>
-      </article>
-    </section>
+        <div class="welcome-orbit orbit-one"></div>
+        <div class="welcome-orbit orbit-two"></div>
+      </section>
+
+      <section class="metric-grid" aria-label="Workforce metrics">
+        <article class="metric-card">
+          <span class="metric-icon team-icon" aria-hidden="true">01</span>
+          <div class="metric-copy"><span>People</span><strong>{{ dashboard.employees.length | number }}</strong><small>In the employee directory</small></div>
+        </article>
+        <article class="metric-card">
+          <span class="metric-icon org-icon" aria-hidden="true">02</span>
+          <div class="metric-copy"><span>Teams</span><strong>{{ dashboard.departments.length | number }}</strong><small>With assigned employees</small></div>
+        </article>
+        <article class="metric-card">
+          <span class="metric-icon pay-icon" aria-hidden="true">03</span>
+          <div class="metric-copy"><span>Payroll records</span><strong>{{ dashboard.payrollCoverage }}<small class="metric-total"> / {{ dashboard.employees.length }}</small></strong><small>Employees with latest pay data</small></div>
+        </article>
+        <article class="metric-card">
+          <span class="metric-icon leave-icon" aria-hidden="true">04</span>
+          <div class="metric-copy"><span>Leave days</span><strong>{{ dashboard.leaveDays | number }}</strong><small>Total days recorded</small></div>
+        </article>
+      </section>
+
+      <div class="insights-grid">
+        <section class="content-card departments-card" aria-labelledby="departments-heading">
+          <header class="section-heading">
+            <div><p class="section-label">YOUR ORGANIZATION</p><h2 id="departments-heading">Teams at a glance</h2></div>
+            <a routerLink="/departments" aria-label="View all departments">View all <span aria-hidden="true">↗</span></a>
+          </header>
+          <div class="department-list" *ngIf="dashboard.departments.length; else noDepartments">
+            <div class="department-row" *ngFor="let department of dashboard.departments | slice:0:5">
+              <div class="department-meta">
+                <span class="department-mark">{{ department.name.slice(0, 1) }}</span>
+                <strong>{{ department.name }}</strong>
+                <span class="department-count">{{ department.employeeCount }}</span>
+              </div>
+              <div class="progress-track" role="img" [attr.aria-label]="department.share + '% of employees'" >
+                <span [style.width.%]="department.share"></span>
+              </div>
+            </div>
+          </div>
+          <ng-template #noDepartments><div class="quiet-empty">Department distribution will show here when employees are assigned to teams.</div></ng-template>
+        </section>
+
+        <section class="content-card people-card" aria-labelledby="people-heading">
+          <header class="section-heading">
+            <div><p class="section-label">TEAM SNAPSHOT</p><h2 id="people-heading">People &amp; pay</h2></div>
+          </header>
+          <div class="snapshot-stat">
+            <span>Average base salary</span>
+            <strong>{{ dashboard.averageSalary === undefined ? 'Not available' : (dashboard.averageSalary | currency:'INR':'symbol':'1.0-0') }}</strong>
+            <small>Calculated from employee salary records</small>
+          </div>
+          <div class="gender-summary" *ngIf="dashboard.genders.length; else noDemographics">
+            <div class="gender-heading"><strong>Team profile</strong><span>{{ dashboard.employees.length }} people</span></div>
+            <div class="gender-track" role="img" aria-label="Employee profile by recorded gender">
+              <span *ngFor="let gender of dashboard.genders" [class]="gender.name.toLowerCase() === 'female' ? 'female-segment' : gender.name.toLowerCase() === 'male' ? 'male-segment' : 'other-segment'" [style.width.%]="gender.share"></span>
+            </div>
+            <div class="gender-legend">
+              <span *ngFor="let gender of dashboard.genders"><i [class]="gender.name.toLowerCase() === 'female' ? 'female-dot' : gender.name.toLowerCase() === 'male' ? 'male-dot' : 'other-dot'"></i>{{ gender.name }} <b>{{ gender.count }}</b></span>
+            </div>
+          </div>
+          <ng-template #noDemographics><p class="quiet-empty compact-empty">Add employee profile details to see your team profile.</p></ng-template>
+          <a class="leave-link" routerLink="/leave"><span class="leave-link-icon" aria-hidden="true">↗</span>Review leave records <span aria-hidden="true">→</span></a>
+        </section>
+      </div>
+
+      <section class="content-card directory-card" aria-labelledby="directory-heading">
+        <header class="section-heading directory-heading">
+          <div><p class="section-label">THE PEOPLE BEHIND THE WORK</p><h2 id="directory-heading">Employee directory</h2><p class="section-description">A quick look at the latest profiles in your workforce.</p></div>
+          <a routerLink="/employees">All employees <span aria-hidden="true">→</span></a>
+        </header>
+        <div class="employee-list" *ngIf="dashboard.employees.length; else noEmployees">
+          <article class="employee-row" *ngFor="let employee of dashboard.employees | slice:0:5">
+            <span class="employee-avatar">{{ employee.initials }}</span>
+            <div class="employee-name"><strong>{{ employee.name }}</strong><small>ID {{ employee.id }}</small></div>
+            <span class="employee-position">{{ employee.position }}</span>
+            <span class="employee-department">{{ employee.department }}</span>
+            <strong class="employee-pay">{{ employee.netPay === undefined ? 'Pay not recorded' : (employee.netPay | currency:'INR':'symbol':'1.0-0') }}</strong>
+          </article>
+        </div>
+        <ng-template #noEmployees>
+          <div class="directory-empty"><span class="empty-icon" aria-hidden="true">+</span><div><strong>Your employee directory is ready.</strong><p>Add your first employee to start building your workforce overview.</p></div><a routerLink="/employees">Add employee <span aria-hidden="true">→</span></a></div>
+        </ng-template>
+      </section>
+    </ng-container>
   </ng-container>
 </section>

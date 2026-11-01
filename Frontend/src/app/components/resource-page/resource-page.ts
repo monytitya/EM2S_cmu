@@ -1,14 +1,20 @@
-import { AsyncPipe, CurrencyPipe, LowerCasePipe, NgFor, NgIf, SlicePipe } from '@angular/common';
+import { AsyncPipe, LowerCasePipe, NgFor, NgIf, SlicePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { catchError, filter, map, of, startWith, Subject, switchMap } from 'rxjs';
+import { catchError, filter, forkJoin, map, Observable, of, startWith, Subject, switchMap } from 'rxjs';
 import { Api, ResourceRecord } from '../../services/api';
 import { ResourceConfig, resourceConfigs } from '../../app.routes';
 
+interface LeaveStats {
+  requests: number;
+  requestedDays: number;
+  employeesOnLeaveToday: number;
+}
+
 @Component({
-  imports: [AsyncPipe, CurrencyPipe, FormsModule, LowerCasePipe, NgFor, NgIf, SlicePipe],
+  imports: [AsyncPipe, FormsModule, LowerCasePipe, NgFor, NgIf, SlicePipe],
   selector: 'app-resource-page',
   styleUrl: './resource-page.css',
   templateUrl: './resource-page.html',
@@ -27,10 +33,15 @@ export class ResourcePage {
     switchMap((config) =>
       this.refresh$.pipe(
         startWith(void 0),
-        switchMap(() => this.api.list(config.resource)),
-        map((records) => ({ records, loading: false, error: false })),
-        catchError(() => of({ records: [], loading: false, error: true })),
-        startWith({ records: [], loading: true, error: false }),
+        switchMap(() => this.loadRecords(config.resource)),
+        map((records) => ({
+          records,
+          loading: false,
+          error: false,
+          leaveStats: config.resource === 'leaves' ? this.getLeaveStats(records) : undefined,
+        })),
+        catchError(() => of({ records: [], loading: false, error: true, leaveStats: undefined })),
+        startWith({ records: [], loading: true, error: false, leaveStats: undefined }),
       ),
     ),
   );
@@ -41,6 +52,67 @@ export class ResourcePage {
   formError = '';
   formData: Record<string, unknown> = {};
   currentConfig: ResourceConfig | null = null;
+
+  private loadRecords(resource: string): Observable<ResourceRecord[]> {
+    if (resource !== 'leaves') return this.api.list(resource);
+
+    return forkJoin({
+      leaves: this.api.list('leaves'),
+      employees: this.api.list('employees'),
+      leaveTypes: this.api.list('leave-types'),
+    }).pipe(
+      map(({ leaves, employees, leaveTypes }) => leaves.map((leave) => {
+        const employeeId = this.numberField(leave, 'employeeId');
+        const employee = employees.find((record) => this.numberField(record, 'id') === employeeId);
+        const firstName = this.stringField(employee || {}, 'firstName') || '';
+        const lastName = this.stringField(employee || {}, 'lastName') || '';
+        const leaveTypeId = this.numberField(leave, 'leaveType');
+        const leaveType = leaveTypes.find((record) => this.numberField(record, 'leaveType') === leaveTypeId);
+
+        return {
+          ...leave,
+          employeeName: `${firstName} ${lastName}`.trim() || (employeeId !== undefined ? `Employee #${employeeId}` : 'Unknown employee'),
+          leaveTypeName: this.stringField(leaveType || {}, 'name') || (leaveTypeId !== undefined ? `Leave type #${leaveTypeId}` : 'Unknown leave type'),
+        };
+      })),
+    );
+  }
+
+  private getLeaveStats(records: ResourceRecord[]): LeaveStats {
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const employeesOnLeave = new Set(
+      records
+        .filter((record) => {
+          const startDate = this.stringField(record, 'startDate')?.slice(0, 10);
+          const endDate = this.stringField(record, 'endDate')?.slice(0, 10);
+          return !!startDate && !!endDate && startDate <= today && endDate >= today;
+        })
+        .map((record) => this.numberField(record, 'employeeId'))
+        .filter((employeeId): employeeId is number => employeeId !== undefined),
+    );
+
+    return {
+      requests: records.length,
+      requestedDays: records.reduce((total, record) => total + (this.numberField(record, 'totalDays') || 0), 0),
+      employeesOnLeaveToday: employeesOnLeave.size,
+    };
+  }
+
+  private numberField(record: ResourceRecord, field: string): number | undefined {
+    const value = record[field];
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string' && value.trim()) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : undefined;
+    }
+    return undefined;
+  }
+
+  private stringField(record: ResourceRecord, field: string): string | undefined {
+    const value = record[field];
+    return typeof value === 'string' ? value : undefined;
+  }
 
   /** Build an empty form from the field definitions */
   emptyForm(config: ResourceConfig): Record<string, unknown> {

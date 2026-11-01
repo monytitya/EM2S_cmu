@@ -155,15 +155,15 @@ export const resourceConfigs: Record<string, ResourceConfig> = {
     displayName: (r) => `Payroll #${r['id'] || 'new'}`
   },
   'leave': {
-    title: 'Leave & Attendance',
+    title: 'Leave Management',
     eyebrow: 'Workforce operations',
-    description: 'Review leave requests and attendance records',
+    description: 'Review employee leave requests. Attendance records are not available in the current API.',
     resource: 'leaves',
     idKey: 'id',
     columns: [
       { key: 'id', label: 'ID' },
-      { key: 'employeeId', label: 'Employee' },
-      { key: 'leaveType', label: 'Leave Type' },
+      { key: 'employeeName', label: 'Employee' },
+      { key: 'leaveTypeName', label: 'Leave Type' },
       { key: 'startDate', label: 'Start date' },
       { key: 'endDate', label: 'End date' },
       { key: 'totalDays', label: 'Days' }
