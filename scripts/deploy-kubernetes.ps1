@@ -19,19 +19,14 @@ function New-UrlSafeSecret {
 }
 
 if (-not (Test-Path -LiteralPath $envPath)) {
-    $databasePassword = New-UrlSafeSecret -ByteCount 32
     $jwtSecret = New-UrlSafeSecret -ByteCount 32
     $jwtSecret = $jwtSecret.Replace('-', '+').Replace('_', '/') + '='
     $envLines = @(
-        "POSTGRES_PASSWORD=$databasePassword"
+        "POSTGRES_PASSWORD=$(New-UrlSafeSecret -ByteCount 32)"
         "JWT_SECRET=$jwtSecret"
         'BOOTSTRAP_ADMIN_USERNAME='
         'BOOTSTRAP_ADMIN_EMAIL='
         'BOOTSTRAP_ADMIN_PASSWORD='
-        'AUTH_DB_HOST_PORT=55432'
-        'EMPLOYEE_DB_HOST_PORT=55433'
-        'LEAVE_DB_HOST_PORT=55434'
-        'PAYROLL_DB_HOST_PORT=55435'
     )
     [System.IO.File]::WriteAllLines($envPath, $envLines, [System.Text.UTF8Encoding]::new($false))
     Write-Output 'Generated local deployment credentials in .env.deploy.'
@@ -64,15 +59,24 @@ try {
         throw 'Docker image build failed.'
     }
 
-    & kubectl scale deployment/cmu-springboot --replicas=0
+    $databasePassword = $values['POSTGRES_PASSWORD']
+    $existingSecretJson = & kubectl get secret cmu-springboot-secret --ignore-not-found -o json
     if ($LASTEXITCODE -ne 0) {
-        throw 'Unable to stop the old combined application deployment.'
+        throw 'Unable to inspect the existing Kubernetes Secret.'
+    }
+    if (-not [string]::IsNullOrWhiteSpace(($existingSecretJson -join ''))) {
+        $existingSecret = ($existingSecretJson -join "`n") | ConvertFrom-Json
+        if ($existingSecret.data.POSTGRES_PASSWORD) {
+            $databasePassword = [System.Text.Encoding]::UTF8.GetString(
+                [Convert]::FromBase64String($existingSecret.data.POSTGRES_PASSWORD)
+            )
+        }
     }
 
     $secretLines = @(
         'SPRING_DATASOURCE_USERNAME=postgres'
-        "SPRING_DATASOURCE_PASSWORD=$($values['POSTGRES_PASSWORD'])"
-        "POSTGRES_PASSWORD=$($values['POSTGRES_PASSWORD'])"
+        "SPRING_DATASOURCE_PASSWORD=$databasePassword"
+        "POSTGRES_PASSWORD=$databasePassword"
         "JWT_SECRET=$($values['JWT_SECRET'])"
         "BOOTSTRAP_ADMIN_USERNAME=$($values['BOOTSTRAP_ADMIN_USERNAME'])"
         "BOOTSTRAP_ADMIN_EMAIL=$($values['BOOTSTRAP_ADMIN_EMAIL'])"
@@ -80,7 +84,7 @@ try {
     )
     [System.IO.File]::WriteAllLines($k8sSecretPath, $secretLines, [System.Text.UTF8Encoding]::new($false))
 
-    $secretManifest = & kubectl create secret generic cmu-springboot-microservices-secret "--from-env-file=$k8sSecretPath" --dry-run=client -o yaml
+    $secretManifest = & kubectl create secret generic cmu-springboot-secret "--from-env-file=$k8sSecretPath" --dry-run=client -o yaml
     if ($LASTEXITCODE -ne 0) {
         throw 'Unable to generate the Kubernetes Secret manifest.'
     }
@@ -94,15 +98,24 @@ try {
         throw 'Unable to apply the Kubernetes application manifests.'
     }
 
-    foreach ($deployment in @('postgres-auth', 'postgres-employee', 'postgres-leave', 'postgres-payroll', 'auth-service', 'employee-service', 'leave-service', 'payroll-service')) {
+    foreach ($deployment in @('postgres', 'cmu-springboot')) {
         & kubectl rollout status "deployment/$deployment" --timeout=10m
         if ($LASTEXITCODE -ne 0) {
             throw "Kubernetes deployment '$deployment' did not become ready."
         }
     }
 
-    Write-Output 'Kubernetes deployments are ready. Database credentials are in the Git-ignored .env.deploy file.'
-    Write-Output 'Use kubectl port-forward to connect locally; connection commands are in README.md.'
+    & kubectl delete deployment auth-service employee-service leave-service payroll-service --ignore-not-found=true
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Unable to remove the old microservice application Deployments.'
+    }
+    & kubectl delete service auth-service employee-service leave-service payroll-service --ignore-not-found=true
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Unable to remove the old microservice Services.'
+    }
+
+    Write-Output 'The combined cmu-springboot application and PostgreSQL are ready.'
+    Write-Output 'Database PVCs were not deleted. Use kubectl port-forward service/cmu-springboot 9090:9090 to access the API.'
 }
 finally {
     if (Test-Path -LiteralPath $k8sSecretPath) {

@@ -10,80 +10,10 @@ spec:
     - host: cmu.local
       http:
         paths:
-          - path: /api/auth
-            pathType: Prefix
-            backend:
-              service:
-                name: auth-service
-                port:
-                  number: 9090
-          - path: /api/users
-            pathType: Prefix
-            backend:
-              service:
-                name: auth-service
-                port:
-                  number: 9090
-          - path: /api/roles
-            pathType: Prefix
-            backend:
-              service:
-                name: auth-service
-                port:
-                  number: 9090
-          - path: /api/employees
-            pathType: Prefix
-            backend:
-              service:
-                name: employee-service
-                port:
-                  number: 9090
-          - path: /api/departments
-            pathType: Prefix
-            backend:
-              service:
-                name: employee-service
-                port:
-                  number: 9090
-          - path: /api/positions
-            pathType: Prefix
-            backend:
-              service:
-                name: employee-service
-                port:
-                  number: 9090
-          - path: /api/leaves
-            pathType: Prefix
-            backend:
-              service:
-                name: leave-service
-                port:
-                  number: 9090
-          - path: /api/leave-types
-            pathType: Prefix
-            backend:
-              service:
-                name: leave-service
-                port:
-                  number: 9090
-          - path: /api/payrolls
-            pathType: Prefix
-            backend:
-              service:
-                name: payroll-service
-                port:
-                  number: 9090
-          - path: /api/salaries
-            pathType: Prefix
-            backend:
-              service:
-                name: payroll-service
-                port:
-                  number: 9090
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: auth-service
+                name: cmu-springboot
                 port:
                   number: 9090

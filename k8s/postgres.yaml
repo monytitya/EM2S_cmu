@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: postgres-auth-pvc
+  name: postgres-pvc
 spec:
   accessModes:
     - ReadWriteOnce
@@ -12,16 +12,18 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: postgres-auth
+  name: postgres
+  labels:
+    app: postgres
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: postgres-auth
+      app: postgres
   template:
     metadata:
       labels:
-        app: postgres-auth
+        app: postgres
     spec:
       containers:
         - name: postgres
@@ -30,249 +32,37 @@ spec:
             - containerPort: 5432
           env:
             - name: POSTGRES_DB
-              value: authdb
+              valueFrom:
+                configMapKeyRef:
+                  name: cmu-springboot-config
+                  key: POSTGRES_DB
             - name: POSTGRES_USER
               valueFrom:
                 configMapKeyRef:
-                  name: cmu-springboot-microservices-config
+                  name: cmu-springboot-config
                   key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: cmu-springboot-microservices-secret
+                  name: cmu-springboot-secret
                   key: POSTGRES_PASSWORD
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
-          resources:
-            requests:
-              cpu: 50m
-              memory: 64Mi
-            limits:
-              cpu: 500m
-              memory: 256Mi
       volumes:
         - name: postgres-data
           persistentVolumeClaim:
-            claimName: postgres-auth-pvc
+            claimName: postgres-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres-auth
+  name: postgres
+  labels:
+    app: postgres
 spec:
   selector:
-    app: postgres-auth
-  ports:
-    - name: postgres
-      port: 5432
-      targetPort: 5432
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgres-employee-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: postgres-employee
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: postgres-employee
-  template:
-    metadata:
-      labels:
-        app: postgres-employee
-    spec:
-      containers:
-        - name: postgres
-          image: postgres:16-alpine
-          ports:
-            - containerPort: 5432
-          env:
-            - name: POSTGRES_DB
-              value: employeedb
-            - name: POSTGRES_USER
-              valueFrom:
-                configMapKeyRef:
-                  name: cmu-springboot-microservices-config
-                  key: POSTGRES_USER
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: cmu-springboot-microservices-secret
-                  key: POSTGRES_PASSWORD
-          volumeMounts:
-            - name: postgres-data
-              mountPath: /var/lib/postgresql/data
-          resources:
-            requests:
-              cpu: 50m
-              memory: 64Mi
-            limits:
-              cpu: 500m
-              memory: 256Mi
-      volumes:
-        - name: postgres-data
-          persistentVolumeClaim:
-            claimName: postgres-employee-pvc
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgres-employee
-spec:
-  selector:
-    app: postgres-employee
-  ports:
-    - name: postgres
-      port: 5432
-      targetPort: 5432
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgres-leave-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: postgres-leave
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: postgres-leave
-  template:
-    metadata:
-      labels:
-        app: postgres-leave
-    spec:
-      containers:
-        - name: postgres
-          image: postgres:16-alpine
-          ports:
-            - containerPort: 5432
-          env:
-            - name: POSTGRES_DB
-              value: leavedb
-            - name: POSTGRES_USER
-              valueFrom:
-                configMapKeyRef:
-                  name: cmu-springboot-microservices-config
-                  key: POSTGRES_USER
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: cmu-springboot-microservices-secret
-                  key: POSTGRES_PASSWORD
-          volumeMounts:
-            - name: postgres-data
-              mountPath: /var/lib/postgresql/data
-          resources:
-            requests:
-              cpu: 50m
-              memory: 64Mi
-            limits:
-              cpu: 500m
-              memory: 256Mi
-      volumes:
-        - name: postgres-data
-          persistentVolumeClaim:
-            claimName: postgres-leave-pvc
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgres-leave
-spec:
-  selector:
-    app: postgres-leave
-  ports:
-    - name: postgres
-      port: 5432
-      targetPort: 5432
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgres-payroll-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: postgres-payroll
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: postgres-payroll
-  template:
-    metadata:
-      labels:
-        app: postgres-payroll
-    spec:
-      containers:
-        - name: postgres
-          image: postgres:16-alpine
-          ports:
-            - containerPort: 5432
-          env:
-            - name: POSTGRES_DB
-              value: payrolldb
-            - name: POSTGRES_USER
-              valueFrom:
-                configMapKeyRef:
-                  name: cmu-springboot-microservices-config
-                  key: POSTGRES_USER
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: cmu-springboot-microservices-secret
-                  key: POSTGRES_PASSWORD
-          volumeMounts:
-            - name: postgres-data
-              mountPath: /var/lib/postgresql/data
-          resources:
-            requests:
-              cpu: 50m
-              memory: 64Mi
-            limits:
-              cpu: 500m
-              memory: 256Mi
-      volumes:
-        - name: postgres-data
-          persistentVolumeClaim:
-            claimName: postgres-payroll-pvc
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgres-payroll
-spec:
-  selector:
-    app: postgres-payroll
+    app: postgres
   ports:
     - name: postgres
       port: 5432

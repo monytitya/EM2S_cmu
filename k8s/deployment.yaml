@@ -1,23 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-service
+  name: cmu-springboot
   labels:
-    app: auth-service
+    app: cmu-springboot
+    component: api
 spec:
-  replicas: 1
-  strategy:
-    type: Recreate
+  replicas: 2
   selector:
     matchLabels:
-      app: auth-service
+      app: cmu-springboot
   template:
     metadata:
       labels:
-        app: auth-service
+        app: cmu-springboot
     spec:
       containers:
-        - name: auth-service
+        - name: cmu-springboot
           image: cmu-springboot:local
           imagePullPolicy: Never
           ports:
@@ -25,283 +24,49 @@ spec:
               name: http
           envFrom:
             - configMapRef:
-                name: cmu-springboot-microservices-config
+                name: cmu-springboot-config
             - secretRef:
-                name: cmu-springboot-microservices-secret
-          env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: auth-service
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://postgres-auth:5432/authdb
+                name: cmu-springboot-secret
           startupProbe:
             httpGet:
               path: /swagger-ui.html
               port: http
-            timeoutSeconds: 5
             periodSeconds: 10
-            failureThreshold: 60
+            failureThreshold: 30
           readinessProbe:
             httpGet:
               path: /swagger-ui.html
               port: http
-            timeoutSeconds: 5
+            initialDelaySeconds: 30
             periodSeconds: 10
             failureThreshold: 6
           livenessProbe:
             httpGet:
               path: /swagger-ui.html
               port: http
-            timeoutSeconds: 5
+            initialDelaySeconds: 60
             periodSeconds: 20
             failureThreshold: 3
           resources:
             requests:
-              cpu: 250m
+              cpu: 200m
               memory: 256Mi
             limits:
-              cpu: 2000m
+              cpu: 500m
               memory: 512Mi
+      restartPolicy: Always
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: auth-service
-spec:
-  type: ClusterIP
-  selector:
-    app: auth-service
-  ports:
-    - name: http
-      port: 9090
-      targetPort: http
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: employee-service
+  name: cmu-springboot
   labels:
-    app: employee-service
-spec:
-  replicas: 1
-  strategy:
-    type: Recreate
-  selector:
-    matchLabels:
-      app: employee-service
-  template:
-    metadata:
-      labels:
-        app: employee-service
-    spec:
-      containers:
-        - name: employee-service
-          image: cmu-springboot:local
-          imagePullPolicy: Never
-          ports:
-            - containerPort: 9090
-              name: http
-          envFrom:
-            - configMapRef:
-                name: cmu-springboot-microservices-config
-            - secretRef:
-                name: cmu-springboot-microservices-secret
-          env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: employee-service
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://postgres-employee:5432/employeedb
-          startupProbe:
-            httpGet:
-              path: /swagger-ui.html
-              port: http
-            timeoutSeconds: 5
-            periodSeconds: 10
-            failureThreshold: 60
-          readinessProbe:
-            httpGet:
-              path: /swagger-ui.html
-              port: http
-            timeoutSeconds: 5
-            periodSeconds: 10
-            failureThreshold: 6
-          livenessProbe:
-            httpGet:
-              path: /swagger-ui.html
-              port: http
-            timeoutSeconds: 5
-            periodSeconds: 20
-            failureThreshold: 3
-          resources:
-            requests:
-              cpu: 250m
-              memory: 256Mi
-            limits:
-              cpu: 2000m
-              memory: 512Mi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: employee-service
+    app: cmu-springboot
 spec:
   type: ClusterIP
   selector:
-    app: employee-service
+    app: cmu-springboot
   ports:
     - name: http
       port: 9090
-      targetPort: http
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: leave-service
-  labels:
-    app: leave-service
-spec:
-  replicas: 1
-  strategy:
-    type: Recreate
-  selector:
-    matchLabels:
-      app: leave-service
-  template:
-    metadata:
-      labels:
-        app: leave-service
-    spec:
-      containers:
-        - name: leave-service
-          image: cmu-springboot:local
-          imagePullPolicy: Never
-          ports:
-            - containerPort: 9090
-              name: http
-          envFrom:
-            - configMapRef:
-                name: cmu-springboot-microservices-config
-            - secretRef:
-                name: cmu-springboot-microservices-secret
-          env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: leave-service
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://postgres-leave:5432/leavedb
-          startupProbe:
-            httpGet:
-              path: /swagger-ui.html
-              port: http
-            timeoutSeconds: 5
-            periodSeconds: 10
-            failureThreshold: 60
-          readinessProbe:
-            httpGet:
-              path: /swagger-ui.html
-              port: http
-            timeoutSeconds: 5
-            periodSeconds: 10
-            failureThreshold: 6
-          livenessProbe:
-            httpGet:
-              path: /swagger-ui.html
-              port: http
-            timeoutSeconds: 5
-            periodSeconds: 20
-            failureThreshold: 3
-          resources:
-            requests:
-              cpu: 250m
-              memory: 256Mi
-            limits:
-              cpu: 2000m
-              memory: 512Mi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: leave-service
-spec:
-  type: ClusterIP
-  selector:
-    app: leave-service
-  ports:
-    - name: http
-      port: 9090
-      targetPort: http
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: payroll-service
-  labels:
-    app: payroll-service
-spec:
-  replicas: 1
-  strategy:
-    type: Recreate
-  selector:
-    matchLabels:
-      app: payroll-service
-  template:
-    metadata:
-      labels:
-        app: payroll-service
-    spec:
-      containers:
-        - name: payroll-service
-          image: cmu-springboot:local
-          imagePullPolicy: Never
-          ports:
-            - containerPort: 9090
-              name: http
-          envFrom:
-            - configMapRef:
-                name: cmu-springboot-microservices-config
-            - secretRef:
-                name: cmu-springboot-microservices-secret
-          env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: payroll-service
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://postgres-payroll:5432/payrolldb
-          startupProbe:
-            httpGet:
-              path: /swagger-ui.html
-              port: http
-            timeoutSeconds: 5
-            periodSeconds: 10
-            failureThreshold: 60
-          readinessProbe:
-            httpGet:
-              path: /swagger-ui.html
-              port: http
-            timeoutSeconds: 5
-            periodSeconds: 10
-            failureThreshold: 6
-          livenessProbe:
-            httpGet:
-              path: /swagger-ui.html
-              port: http
-            timeoutSeconds: 5
-            periodSeconds: 20
-            failureThreshold: 3
-          resources:
-            requests:
-              cpu: 250m
-              memory: 256Mi
-            limits:
-              cpu: 2000m
-              memory: 512Mi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: payroll-service
-spec:
-  type: ClusterIP
-  selector:
-    app: payroll-service
-  ports:
-    - name: http
-      port: 9090
-      targetPort: http
+      targetPort: 9090
