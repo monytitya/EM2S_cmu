@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: cmu-springboot-config
+  name: cmu-springboot-microservices-config
   labels:
     app: cmu-springboot
 data:

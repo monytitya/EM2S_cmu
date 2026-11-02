@@ -5,7 +5,9 @@ metadata:
   labels:
     app: auth-service
 spec:
-  replicas: 2
+  replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: auth-service
@@ -23,9 +25,9 @@ spec:
               name: http
           envFrom:
             - configMapRef:
-                name: cmu-springboot-config
+                name: cmu-springboot-microservices-config
             - secretRef:
-                name: cmu-springboot-secret
+                name: cmu-springboot-microservices-secret
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: auth-service
@@ -35,26 +37,29 @@ spec:
             httpGet:
               path: /swagger-ui.html
               port: http
+            timeoutSeconds: 5
             periodSeconds: 10
-            failureThreshold: 30
+            failureThreshold: 60
           readinessProbe:
             httpGet:
               path: /swagger-ui.html
               port: http
+            timeoutSeconds: 5
             periodSeconds: 10
             failureThreshold: 6
           livenessProbe:
             httpGet:
               path: /swagger-ui.html
               port: http
+            timeoutSeconds: 5
             periodSeconds: 20
             failureThreshold: 3
           resources:
             requests:
-              cpu: 100m
+              cpu: 250m
               memory: 256Mi
             limits:
-              cpu: 500m
+              cpu: 2000m
               memory: 512Mi
 ---
 apiVersion: v1
@@ -77,7 +82,9 @@ metadata:
   labels:
     app: employee-service
 spec:
-  replicas: 2
+  replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: employee-service
@@ -95,9 +102,9 @@ spec:
               name: http
           envFrom:
             - configMapRef:
-                name: cmu-springboot-config
+                name: cmu-springboot-microservices-config
             - secretRef:
-                name: cmu-springboot-secret
+                name: cmu-springboot-microservices-secret
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: employee-service
@@ -107,26 +114,29 @@ spec:
             httpGet:
               path: /swagger-ui.html
               port: http
+            timeoutSeconds: 5
             periodSeconds: 10
-            failureThreshold: 30
+            failureThreshold: 60
           readinessProbe:
             httpGet:
               path: /swagger-ui.html
               port: http
+            timeoutSeconds: 5
             periodSeconds: 10
             failureThreshold: 6
           livenessProbe:
             httpGet:
               path: /swagger-ui.html
               port: http
+            timeoutSeconds: 5
             periodSeconds: 20
             failureThreshold: 3
           resources:
             requests:
-              cpu: 100m
+              cpu: 250m
               memory: 256Mi
             limits:
-              cpu: 500m
+              cpu: 2000m
               memory: 512Mi
 ---
 apiVersion: v1
@@ -149,7 +159,9 @@ metadata:
   labels:
     app: leave-service
 spec:
-  replicas: 2
+  replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: leave-service
@@ -167,9 +179,9 @@ spec:
               name: http
           envFrom:
             - configMapRef:
-                name: cmu-springboot-config
+                name: cmu-springboot-microservices-config
             - secretRef:
-                name: cmu-springboot-secret
+                name: cmu-springboot-microservices-secret
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: leave-service
@@ -179,26 +191,29 @@ spec:
             httpGet:
               path: /swagger-ui.html
               port: http
+            timeoutSeconds: 5
             periodSeconds: 10
-            failureThreshold: 30
+            failureThreshold: 60
           readinessProbe:
             httpGet:
               path: /swagger-ui.html
               port: http
+            timeoutSeconds: 5
             periodSeconds: 10
             failureThreshold: 6
           livenessProbe:
             httpGet:
               path: /swagger-ui.html
               port: http
+            timeoutSeconds: 5
             periodSeconds: 20
             failureThreshold: 3
           resources:
             requests:
-              cpu: 100m
+              cpu: 250m
               memory: 256Mi
             limits:
-              cpu: 500m
+              cpu: 2000m
               memory: 512Mi
 ---
 apiVersion: v1
@@ -221,7 +236,9 @@ metadata:
   labels:
     app: payroll-service
 spec:
-  replicas: 2
+  replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: payroll-service
@@ -239,9 +256,9 @@ spec:
               name: http
           envFrom:
             - configMapRef:
-                name: cmu-springboot-config
+                name: cmu-springboot-microservices-config
             - secretRef:
-                name: cmu-springboot-secret
+                name: cmu-springboot-microservices-secret
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: payroll-service
@@ -251,26 +268,29 @@ spec:
             httpGet:
               path: /swagger-ui.html
               port: http
+            timeoutSeconds: 5
             periodSeconds: 10
-            failureThreshold: 30
+            failureThreshold: 60
           readinessProbe:
             httpGet:
               path: /swagger-ui.html
               port: http
+            timeoutSeconds: 5
             periodSeconds: 10
             failureThreshold: 6
           livenessProbe:
             httpGet:
               path: /swagger-ui.html
               port: http
+            timeoutSeconds: 5
             periodSeconds: 20
             failureThreshold: 3
           resources:
             requests:
-              cpu: 100m
+              cpu: 250m
               memory: 256Mi
             limits:
-              cpu: 500m
+              cpu: 2000m
               memory: 512Mi
 ---
 apiVersion: v1

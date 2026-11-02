@@ -34,16 +34,23 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 configMapKeyRef:
-                  name: cmu-springboot-config
+                  name: cmu-springboot-microservices-config
                   key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: cmu-springboot-secret
+                  name: cmu-springboot-microservices-secret
                   key: POSTGRES_PASSWORD
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
       volumes:
         - name: postgres-data
           persistentVolumeClaim:
@@ -97,16 +104,23 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 configMapKeyRef:
-                  name: cmu-springboot-config
+                  name: cmu-springboot-microservices-config
                   key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: cmu-springboot-secret
+                  name: cmu-springboot-microservices-secret
                   key: POSTGRES_PASSWORD
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
       volumes:
         - name: postgres-data
           persistentVolumeClaim:
@@ -160,16 +174,23 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 configMapKeyRef:
-                  name: cmu-springboot-config
+                  name: cmu-springboot-microservices-config
                   key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: cmu-springboot-secret
+                  name: cmu-springboot-microservices-secret
                   key: POSTGRES_PASSWORD
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
       volumes:
         - name: postgres-data
           persistentVolumeClaim:
@@ -223,16 +244,23 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 configMapKeyRef:
-                  name: cmu-springboot-config
+                  name: cmu-springboot-microservices-config
                   key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: cmu-springboot-secret
+                  name: cmu-springboot-microservices-secret
                   key: POSTGRES_PASSWORD
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
       volumes:
         - name: postgres-data
           persistentVolumeClaim:

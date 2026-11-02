@@ -13,7 +13,11 @@
 app-sidebar {
 	display: block;
 	flex: 0 0 260px;
+	height: 100vh;
 	min-height: 100vh;
+	position: sticky;
+	top: 0;
+	align-self: flex-start;
 }
 
 .app-content {
@@ -46,7 +50,9 @@ app-topbar {
 	}
 
 	app-sidebar {
+		height: auto;
 		min-height: auto;
+		position: static;
 	}
 
 	.app-content {

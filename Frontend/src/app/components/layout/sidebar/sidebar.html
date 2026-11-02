@@ -1,22 +1,24 @@
 <aside class="sidebar">
-  <div class="brand">
-    <img class="brand-mark" src="/hr-logo.png" alt="HR" />
-    <span>HUMAN<span>IQ</span></span>
+  <div class="sidebar-navigation">
+    <div class="brand">
+      <img class="brand-mark" src="/hr-logo.png" alt="HR" />
+      <span>HUMAN<span>IQ</span></span>
+    </div>
+    <p class="section-label">Workspace</p>
+    <nav aria-label="Workspace navigation">
+      <a routerLink="/dashboard" routerLinkActive="active" ariaCurrentWhenActive="page"><svg lucideLayoutDashboard size="18"></svg>Overview</a>
+      <a routerLink="/employees" routerLinkActive="active" ariaCurrentWhenActive="page"><svg lucideUsers size="18"></svg>Employees</a>
+      <a routerLink="/positions" routerLinkActive="active" ariaCurrentWhenActive="page"><svg lucideBriefcase size="18"></svg>Positions</a>
+      <a routerLink="/departments" routerLinkActive="active" ariaCurrentWhenActive="page"><svg lucideBuilding2 size="18"></svg>Departments</a>
+      <a routerLink="/salaries" routerLinkActive="active" ariaCurrentWhenActive="page"><svg lucideDollarSign size="18"></svg>Salaries</a>
+      <a routerLink="/payroll" routerLinkActive="active" ariaCurrentWhenActive="page"><svg lucideReceipt size="18"></svg>Payroll</a>
+      <a routerLink="/leave" routerLinkActive="active" ariaCurrentWhenActive="page"><svg lucideCalendarClock size="18"></svg>Leave management</a>
+      <a routerLink="/leave-types" routerLinkActive="active" ariaCurrentWhenActive="page"><svg lucideClipboardList size="18"></svg>Leave Types</a>
+    </nav>
   </div>
-  <p class="section-label">Workspace</p>
-  <nav>
-    <a routerLink="/dashboard" routerLinkActive="active"><svg lucideLayoutDashboard size="18"></svg>Overview</a>
-    <a routerLink="/employees" routerLinkActive="active"><svg lucideUsers size="18"></svg>Employees</a>
-    <a routerLink="/positions" routerLinkActive="active"><svg lucideBriefcase size="18"></svg>Positions</a>
-    <a routerLink="/departments" routerLinkActive="active"><svg lucideBuilding2 size="18"></svg>Departments</a>
-    <a routerLink="/salaries" routerLinkActive="active"><svg lucideDollarSign size="18"></svg>Salaries</a>
-    <a routerLink="/payroll" routerLinkActive="active"><svg lucideReceipt size="18"></svg>Payroll</a>
-    <a routerLink="/leave" routerLinkActive="active"><svg lucideCalendarClock size="18"></svg>Leave management</a>
-    <a routerLink="/leave-types" routerLinkActive="active"><svg lucideClipboardList size="18"></svg>Leave Types</a>
-  </nav>
   <div class="sidebar-bottom">
-    <a routerLink="/users" routerLinkActive="active"><svg lucideUsers size="18"></svg>Admin users</a>
-    <a routerLink="/roles" routerLinkActive="active"><svg lucideShieldCheck size="18"></svg>Roles</a>
+    <a routerLink="/users" routerLinkActive="active" ariaCurrentWhenActive="page"><svg lucideUsers size="18"></svg>Admin users</a>
+    <a routerLink="/roles" routerLinkActive="active" ariaCurrentWhenActive="page"><svg lucideShieldCheck size="18"></svg>Roles</a>
     <button class="profile" type="button" aria-label="Edit your account profile" (click)="openProfile()">
       <img class="avatar" src="/admin-logo.png" alt="" />
       <span class="profile-copy">

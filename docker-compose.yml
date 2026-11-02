@@ -10,7 +10,7 @@ services:
       SPRING_PROFILES_ACTIVE: auth-service
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/authdb
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.deploy}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a base64-encoded 32-byte key}
       BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-}
       BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
@@ -27,7 +27,7 @@ services:
       SPRING_PROFILES_ACTIVE: employee-service
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-employee:5432/employeedb
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.deploy}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a base64-encoded 32-byte key}
 
   leave-service:
@@ -41,7 +41,7 @@ services:
       SPRING_PROFILES_ACTIVE: leave-service
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-leave:5432/leavedb
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.deploy}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a base64-encoded 32-byte key}
 
   payroll-service:
@@ -55,7 +55,7 @@ services:
       SPRING_PROFILES_ACTIVE: payroll-service
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-payroll:5432/payrolldb
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.deploy}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a base64-encoded 32-byte key}
 
   postgres-auth:
@@ -64,7 +64,9 @@ services:
     environment:
       POSTGRES_DB: authdb
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.deploy}
+    ports:
+      - "127.0.0.1:${AUTH_DB_HOST_PORT:-55432}:5432"
     volumes:
       - auth-db:/var/lib/postgresql/data
     healthcheck:
@@ -79,7 +81,9 @@ services:
     environment:
       POSTGRES_DB: employeedb
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.deploy}
+    ports:
+      - "127.0.0.1:${EMPLOYEE_DB_HOST_PORT:-55433}:5432"
     volumes:
       - employee-db:/var/lib/postgresql/data
     healthcheck:
@@ -94,7 +98,9 @@ services:
     environment:
       POSTGRES_DB: leavedb
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.deploy}
+    ports:
+      - "127.0.0.1:${LEAVE_DB_HOST_PORT:-55434}:5432"
     volumes:
       - leave-db:/var/lib/postgresql/data
     healthcheck:
@@ -109,7 +115,9 @@ services:
     environment:
       POSTGRES_DB: payrolldb
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.deploy}
+    ports:
+      - "127.0.0.1:${PAYROLL_DB_HOST_PORT:-55435}:5432"
     volumes:
       - payroll-db:/var/lib/postgresql/data
     healthcheck:
