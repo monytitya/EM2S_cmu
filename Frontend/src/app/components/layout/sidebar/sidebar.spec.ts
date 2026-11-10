@@ -7,7 +7,9 @@ import { Sidebar } from './sidebar';
 
 describe('Sidebar', () => {
   let fixture: ComponentFixture<Sidebar>;
+  let getCurrentProfile: ReturnType<typeof vi.fn>;
   let updateCurrentProfile: ReturnType<typeof vi.fn>;
+  let logout: ReturnType<typeof vi.fn>;
   const profile = {
     id: 8,
     username: 'admin',
@@ -17,6 +19,8 @@ describe('Sidebar', () => {
   };
 
   beforeEach(async () => {
+    getCurrentProfile = vi.fn(() => of(profile));
+    logout = vi.fn();
     updateCurrentProfile = vi.fn((update: { username: string; email: string; password?: string }) =>
       of({ ...profile, ...update, jwt: 'updated-token' }),
     );
@@ -27,11 +31,11 @@ describe('Sidebar', () => {
         {
           provide: Api,
           useValue: {
-            getCurrentProfile: () => of(profile),
+            getCurrentProfile,
             updateCurrentProfile,
           },
         },
-        { provide: Auth, useValue: { updateToken: vi.fn(), setProfile: vi.fn() } },
+        { provide: Auth, useValue: { updateToken: vi.fn(), setProfile: vi.fn(), logout } },
       ],
     }).compileComponents();
 
@@ -43,12 +47,25 @@ describe('Sidebar', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  it('shows an icon sign-out action that logs out', () => {
+    fixture.detectChanges();
+    const signOut = fixture.nativeElement.querySelector('.auth-action') as HTMLButtonElement;
+
+    expect(signOut.textContent).toContain('Sign out');
+    expect(signOut.querySelector('svg')).toBeTruthy();
+    signOut.click();
+
+    expect(logout).toHaveBeenCalledOnce();
+  });
+
   it('opens the account editor and saves the signed-in profile', () => {
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
+    expect(getCurrentProfile).not.toHaveBeenCalled();
     element.querySelector<HTMLButtonElement>('.profile')?.click();
     fixture.detectChanges();
 
+    expect(getCurrentProfile).toHaveBeenCalledTimes(1);
     expect(element.querySelector('[role="dialog"]')).toBeTruthy();
     expect(fixture.componentInstance.profileForm.email).toBe('admin@example.com');
 

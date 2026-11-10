@@ -2,7 +2,7 @@ import { AsyncPipe, CurrencyPipe, DecimalPipe, NgFor, NgIf, SlicePipe } from '@a
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { catchError, map, of, startWith } from 'rxjs';
-import { Api, EmployeeOverview } from '../../services/api';
+import { Api, WorkforceOverview } from '../../services/api';
 
 interface DepartmentSummary {
   name: string;
@@ -31,6 +31,7 @@ interface DashboardData {
   departments: DepartmentSummary[];
   genders: GenderSummary[];
   averageSalary?: number;
+  payrollRecordCount: number;
   payrollCoverage: number;
   leaveDays: number;
   loading: boolean;
@@ -41,6 +42,7 @@ const EMPTY_DASHBOARD: DashboardData = {
   employees: [],
   departments: [],
   genders: [],
+  payrollRecordCount: 0,
   payrollCoverage: 0,
   leaveDays: 0,
   loading: false,
@@ -54,8 +56,8 @@ const EMPTY_DASHBOARD: DashboardData = {
 export class Dashboard {
   private readonly api = inject(Api);
 
-  readonly dashboard$ = this.api.getEmployeeOverview().pipe(
-    map((employees) => this.buildDashboardData(employees)),
+  readonly dashboard$ = this.api.getWorkforceOverview().pipe(
+    map((overview) => this.buildDashboardData(overview)),
     catchError((error: { status?: number }) => of({
       ...EMPTY_DASHBOARD,
       error: error.status
@@ -65,7 +67,8 @@ export class Dashboard {
     startWith({ ...EMPTY_DASHBOARD, loading: true }),
   );
 
-  private buildDashboardData(employees: EmployeeOverview[]): DashboardData {
+  private buildDashboardData(overview: WorkforceOverview): DashboardData {
+    const employees = overview.employees;
     const departments = new Map<string, number>();
     const genders = new Map<string, number>();
     const employeeRows = employees.map((employee) => {
@@ -97,17 +100,14 @@ export class Dashboard {
       share: employees.length ? Math.round((count / employees.length) * 100) : 0,
     })).sort((left, right) => right.count - left.count);
 
-    const salaries = employees
-      .map((employee) => employee.basicSalary)
-      .filter((salary): salary is number => salary !== undefined);
-
     return {
       employees: employeeRows,
       departments: departmentRows,
       genders: genderRows,
-      averageSalary: salaries.length ? salaries.reduce((total, salary) => total + salary, 0) / salaries.length : undefined,
-      payrollCoverage: employeeRows.filter((employee) => employee.netPay !== undefined).length,
-      leaveDays: employees.reduce((total, employee) => total + (employee.leaveTotalDays || 0), 0),
+      averageSalary: overview.averageSalary,
+      payrollRecordCount: overview.payrollRecordCount,
+      payrollCoverage: overview.payrollCoverage,
+      leaveDays: overview.leaveDays,
       loading: false,
     };
   }

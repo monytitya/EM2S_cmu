@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Profile;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
 
 @RestController
 @Profile({"auth-service", "default"})
@@ -49,22 +50,24 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) throws Exception {
+    public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
+        UserDetails userDetails;
         try {
-            authenticationManager.authenticate(
+            Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             authRequest.getUsername(),
                             authRequest.getPassword()
                     )
             );
+            if (!(authentication.getPrincipal() instanceof UserDetails authenticatedUser)) {
+                throw new IllegalStateException("Authentication did not return user details");
+            }
+            userDetails = authenticatedUser;
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(401).body(Map.of(
                     "error", "Incorrect username or password"
             ));
         }
-
-        final UserDetails userDetails = userDetailsService
-                .loadUserByUsername(authRequest.getUsername());
 
         final String jwt = jwtUtil.generateToken(userDetails);
 
@@ -73,37 +76,41 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
-        String username = request.get("username");
-        String email = request.get("email");
+        String username = request.get("username") == null ? "" : request.get("username").trim();
+        String email = request.get("email") == null ? "" : request.get("email").trim();
         String password = request.get("password");
-        String roleName = "USER";
+        String roleName = request.getOrDefault("role", "USER").trim().toUpperCase();
 
-        // Validate inputs
-        if (username == null || email == null || password == null) {
+        if (username.isBlank() || email.isBlank() || password == null || password.isBlank() || roleName.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of(
-                    "error", "username, email, and password are required"
+                    "error", "username, email, password, and a valid role are required"
+            ));
+        }
+
+        if ("ADMIN".equals(roleName)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "error", "Administrator accounts must be assigned by an existing administrator"
+            ));
+        }
+
+        Role role = roleRepository.findFirstByNameOrderByIdAsc(roleName).orElse(null);
+        if (role == null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "The selected role is not available for registration"
             ));
         }
 
         if (userRepository.findByUsername(username).isPresent()) {
-            return ResponseEntity.badRequest().body(Map.of(
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "error", "Username already exists"
             ));
         }
 
         if (userRepository.findByEmail(email).isPresent()) {
-            return ResponseEntity.badRequest().body(Map.of(
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "error", "Email already exists"
             ));
         }
-
-        Role role = roleRepository.findFirstByNameOrderByIdAsc(roleName.toUpperCase()).orElseGet(() -> {
-            Role newRole = new Role();
-            newRole.setId(System.currentTimeMillis());
-            newRole.setName(roleName.toUpperCase());
-            newRole.setDescriptions(roleName.toUpperCase() + " role");
-            return roleRepository.save(newRole);
-        });
 
         // Create the user
         User user = new User();
@@ -116,7 +123,7 @@ public class AuthController {
 
         User savedUser = userRepository.save(user);
 
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        final UserDetails userDetails = userDetailsService.createUserDetails(savedUser);
         final String jwt = jwtUtil.generateToken(userDetails);
 
         return ResponseEntity.ok(Map.of(
@@ -126,6 +133,18 @@ public class AuthController {
                 "role", role.getName(),
                 "jwt", jwt
         ));
+    }
+
+    @GetMapping("/registration-roles")
+    public List<String> getRegistrationRoles() {
+        return roleRepository.findAll().stream()
+                .map(Role::getName)
+                .filter(name -> name != null && !name.isBlank())
+                .map(String::toUpperCase)
+                .filter(name -> !"ADMIN".equals(name))
+                .distinct()
+                .sorted()
+                .toList();
     }
 
     @GetMapping("/me")

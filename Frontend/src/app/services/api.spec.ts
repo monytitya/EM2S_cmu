@@ -82,6 +82,32 @@ describe('Api', () => {
     });
   });
 
+  it('fetches safe registration roles and submits the selected role', () => {
+    let roles: string[] | undefined;
+    service.getRegistrationRoles().subscribe((result) => roles = result);
+    httpTesting.expectOne('/api/auth/registration-roles').flush(['USER']);
+
+    expect(roles).toEqual(['USER']);
+
+    service.register('new-user', 'new@example.com', 'password123', 'USER').subscribe();
+    const request = httpTesting.expectOne('/api/auth/register');
+
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      username: 'new-user',
+      email: 'new@example.com',
+      password: 'password123',
+      role: 'USER',
+    });
+    request.flush({
+      message: 'User registered successfully',
+      userId: 9,
+      username: 'new-user',
+      role: 'USER',
+      jwt: 'token',
+    });
+  });
+
   it('routes to separate local services when microservice mode is selected', () => {
     window.history.replaceState({}, '', '/?apiMode=microservices');
     service.list('employees').subscribe();
@@ -111,7 +137,7 @@ describe('Api', () => {
   it('combines dashboard data from all domain services', () => {
     window.history.replaceState({}, '', '/?apiMode=microservices');
     let overview: unknown;
-    service.getEmployeeOverview().subscribe((result) => overview = result);
+    service.getWorkforceOverview().subscribe((result) => overview = result);
 
     httpTesting.expectOne('http://localhost:9091/api/employees').flush([
       { id: 7, firstName: 'Alex', lastName: 'Morgan', departmentId: 3, positionId: 4 },
@@ -123,17 +149,58 @@ describe('Api', () => {
     httpTesting.expectOne('http://localhost:9092/api/leaves').flush([{ employeeId: 7, leaveType: 2, totalDays: 3, startDate: '2026-02-01' }]);
     httpTesting.expectOne('http://localhost:9092/api/leave-types').flush([{ leaveType: 2, name: 'Annual' }]);
 
-    expect(overview).toEqual([{
-      employeeId: 7,
-      employeeFullName: 'Alex Morgan',
-      gender: undefined,
-      departmentName: 'People',
-      positionTitle: 'Analyst',
-      basicSalary: 4800,
-      netPay: 4200,
-      paymentStatus: 'PAID',
-      leaveTypeName: 'Annual',
-      leaveTotalDays: 3,
-    }]);
+    expect(overview).toEqual({
+      employees: [{
+        employeeId: 7,
+        employeeFullName: 'Alex Morgan',
+        gender: undefined,
+        departmentName: 'People',
+        positionTitle: 'Analyst',
+        basicSalary: 4800,
+        netPay: 4200,
+        paymentStatus: 'PAID',
+        leaveTypeName: 'Annual',
+        leaveTotalDays: 3,
+      }],
+      averageSalary: 4800,
+      payrollRecordCount: 1,
+      payrollCoverage: 1,
+      leaveDays: 3,
+    });
+  });
+
+  it('keeps payroll and leave totals when records reference employees outside the current directory', () => {
+    let overview: unknown;
+    service.getWorkforceOverview().subscribe((result) => overview = result);
+
+    httpTesting.expectOne('/api/employees').flush([{ id: 10, firstName: 'Alex', lastName: 'Morgan' }]);
+    httpTesting.expectOne('/api/departments').flush([]);
+    httpTesting.expectOne('/api/positions').flush([]);
+    httpTesting.expectOne('/api/salaries').flush([{ employeeId: 1, basicSalary: 1000, effectiveDate: '2026-09-01' }]);
+    httpTesting.expectOne('/api/payrolls').flush([
+      { employeeId: 1, netPay: 900, payPeriodEnd: '2026-08-31' },
+      { employeeId: 2, netPay: 250, payPeriodEnd: '2026-11-01' },
+    ]);
+    httpTesting.expectOne('/api/leaves').flush([{ employeeId: 2, totalDays: 10, startDate: '2026-10-01' }]);
+    httpTesting.expectOne('/api/leave-types').flush([]);
+
+    expect(overview).toEqual({
+      employees: [{
+        employeeId: 10,
+        employeeFullName: 'Alex Morgan',
+        gender: undefined,
+        departmentName: undefined,
+        positionTitle: undefined,
+        basicSalary: undefined,
+        netPay: undefined,
+        paymentStatus: undefined,
+        leaveTypeName: undefined,
+        leaveTotalDays: 0,
+      }],
+      averageSalary: 1000,
+      payrollRecordCount: 2,
+      payrollCoverage: 0,
+      leaveDays: 10,
+    });
   });
 });

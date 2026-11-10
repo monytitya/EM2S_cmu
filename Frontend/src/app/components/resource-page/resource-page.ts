@@ -204,11 +204,41 @@ export class ResourcePage {
         this.refresh$.next();
       },
       error: (error: HttpErrorResponse) => {
-        this.formError = error.status === 409
-          ? String(error.error?.message || 'A record with this data already exists.')
-          : `Unable to save. ${error.error?.message || 'Check your data and try again.'}`;
+        this.formError = this.getSaveErrorMessage(error);
       },
     });
+  }
+
+  private getSaveErrorMessage(error: HttpErrorResponse): string {
+    if (error.status === 0) {
+      return 'Could not reach the API. Check the server or port-forward and try again.';
+    }
+    if (error.status === 401) {
+      return 'Your session may have expired. Sign in again and retry.';
+    }
+    if (error.status === 403) {
+      return 'Your account cannot save this record. Sign in with an ADMIN account.';
+    }
+
+    const body = error.error;
+    const message = typeof body === 'string'
+      ? body
+      : body && typeof body === 'object'
+        ? [body.message, body.detail, body.error].find((value): value is string =>
+            typeof value === 'string' && value.trim().length > 0,
+          )
+        : undefined;
+
+    if (error.status === 409) {
+      return message || 'A record with this data already exists.';
+    }
+    if (error.status === 400) {
+      return message || 'The server rejected the submitted data. Check required fields and IDs.';
+    }
+    if (error.status >= 500) {
+      return message || `The server failed to save this record (HTTP ${error.status}).`;
+    }
+    return message || `Unable to save this record (HTTP ${error.status}).`;
   }
 
   /** Generic delete – works for all resource types */

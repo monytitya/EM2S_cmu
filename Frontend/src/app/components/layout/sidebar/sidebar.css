@@ -26,6 +26,9 @@ nav a:focus-visible,.sidebar-bottom a:focus-visible { outline:2px solid #9db5ff;
 .profile-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .profile-edit{color:#b9c5eb;font-size:10px;opacity:0;transition:opacity .15s}
 .profile:hover .profile-edit,.profile:focus-visible .profile-edit{opacity:1}
+.auth-action{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;margin-top:8px;padding:10px;border:1px solid #495789;border-radius:7px;background:transparent;color:#c4cdec;cursor:pointer;font:600 11px Arial,sans-serif}
+.auth-action:hover{border-color:#7484bc;background:#303b70;color:#fff}
+.auth-action:focus-visible{outline:2px solid #9db5ff;outline-offset:2px}
 .profile-backdrop{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:20px;background:#17202d80}
 .profile-modal{width:min(100%,480px);max-height:90vh;overflow:auto;border:1px solid #e8ecf3;border-radius:14px;background:#fff;padding:24px;box-shadow:0 24px 70px #10192d40;color:#25314a}
 .profile-modal-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px}

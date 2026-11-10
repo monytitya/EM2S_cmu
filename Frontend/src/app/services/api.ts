@@ -15,6 +15,14 @@ export interface EmployeeOverview {
 	leaveTotalDays?: number;
 }
 
+export interface WorkforceOverview {
+	employees: EmployeeOverview[];
+	averageSalary?: number;
+	payrollRecordCount: number;
+	payrollCoverage: number;
+	leaveDays: number;
+}
+
 export interface UserRecord {
 	id: number;
 	username: string;
@@ -89,7 +97,7 @@ export class Api {
 		return this.http.request<T>(method, url, { body });
 	}
 
-	getEmployeeOverview(): Observable<EmployeeOverview[]> {
+	getWorkforceOverview(): Observable<WorkforceOverview> {
 		return forkJoin({
 			employees: this.list('employees'),
 			departments: this.list('departments'),
@@ -98,8 +106,8 @@ export class Api {
 			payrolls: this.list('payrolls'),
 			leaves: this.list('leaves'),
 			leaveTypes: this.list('leave-types'),
-		}).pipe(map(({ employees, departments, positions, salaries, payrolls, leaves, leaveTypes }) =>
-			employees.map((employee) => {
+		}).pipe(map(({ employees, departments, positions, salaries, payrolls, leaves, leaveTypes }) => {
+			const employeeRows = employees.map((employee) => {
 				const employeeId = this.numberField(employee, 'id');
 				const employeeLeaves = leaves.filter((leave) => this.numberField(leave, 'employeeId') === employeeId);
 				const latestSalary = this.latestBy(salaries.filter((salary) => this.numberField(salary, 'employeeId') === employeeId), 'effectiveDate');
@@ -123,11 +131,39 @@ export class Api {
 					leaveTypeName: this.stringField(leaveType || {}, 'name'),
 					leaveTotalDays: employeeLeaves.reduce((total, leave) => total + (this.numberField(leave, 'totalDays') || 0), 0),
 				};
-			}),
-		));
+			});
+			const employeeIds = new Set(employeeRows
+				.map((employee) => employee.employeeId)
+				.filter((employeeId): employeeId is number => employeeId !== undefined));
+			const payrollEmployeeIds = new Set(payrolls
+				.map((payroll) => this.numberField(payroll, 'employeeId'))
+				.filter((employeeId): employeeId is number => employeeId !== undefined));
+			const salaryEmployeeIds = new Set(salaries
+				.map((salary) => this.numberField(salary, 'employeeId'))
+				.filter((employeeId): employeeId is number => employeeId !== undefined));
+			const latestSalaries = Array.from(salaryEmployeeIds, (employeeId) =>
+				this.latestBy(salaries.filter((salary) => this.numberField(salary, 'employeeId') === employeeId), 'effectiveDate'),
+			);
+			const salaryValues = latestSalaries
+				.map((salary) => this.numberField(salary || {}, 'basicSalary'))
+				.filter((salary): salary is number => salary !== undefined);
+
+			return {
+				employees: employeeRows,
+				averageSalary: salaryValues.length
+					? salaryValues.reduce((total, salary) => total + salary, 0) / salaryValues.length
+					: undefined,
+				payrollRecordCount: payrolls.length,
+				payrollCoverage: Array.from(payrollEmployeeIds).filter((employeeId) => employeeIds.has(employeeId)).length,
+				leaveDays: leaves.reduce((total, leave) => total + (this.numberField(leave, 'totalDays') || 0), 0),
+			};
+		}));
 	}
 
 	login(username: string, password: string): Observable<LoginResponse> { return this.http.post<LoginResponse>(`${this.getApiBaseUrl('auth')}/auth/login`, { username, password }); }
+	getRegistrationRoles(): Observable<string[]> {
+		return this.http.get<string[]>(`${this.getApiBaseUrl('auth')}/auth/registration-roles`);
+	}
 	register(username: string, email: string, password: string, role = 'USER'): Observable<RegisterResponse> {
 		return this.http.post<RegisterResponse>(`${this.getApiBaseUrl('auth')}/auth/register`, { username, email, password, role });
 	}

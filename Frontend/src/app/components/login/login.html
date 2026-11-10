@@ -51,10 +51,12 @@
 
         <div class="field-group" *ngIf="mode === 'register'">
           <label for="role">Your role</label>
-          <select id="role" name="role" [(ngModel)]="role">
-            <option value="USER">Team member</option>
-            <option value="ADMIN">Administrator</option>
+          <select id="role" name="role" [(ngModel)]="role" required [disabled]="rolesLoading || submitting || !registrationRoles.length">
+            <option *ngFor="let availableRole of registrationRoles" [value]="availableRole">{{ availableRole === 'USER' ? 'Team member' : availableRole }}</option>
           </select>
+          <small class="field-help" *ngIf="rolesLoading">Loading available roles…</small>
+          <small class="field-help" *ngIf="roleLoadWarning">{{ roleLoadWarning }}</small>
+          <small class="field-help" *ngIf="!rolesLoading && registrationRoles.length === 1">Administrator access is managed separately.</small>
         </div>
 
         <div class="field-group">
@@ -63,11 +65,13 @@
         </div>
 
         <p *ngIf="error" class="form-error" role="alert">{{ error }}</p>
+        <button *ngIf="showRegistrationAction" class="error-action" type="button" (click)="toggleMode()">Create an account</button>
         <p *ngIf="success" class="form-success" role="status">{{ success }}</p>
 
         <button type="submit" class="primary-action" [disabled]="submitting">
           <span>{{ submitting ? (mode === 'login' ? 'Signing in...' : 'Creating account...') : (mode === 'login' ? 'Sign in' : 'Create account') }}</span>
-          <span aria-hidden="true">&#8594;</span>
+          <svg *ngIf="mode === 'login'; else registerArrow" lucideLogIn size="17" aria-hidden="true"></svg>
+          <ng-template #registerArrow><span aria-hidden="true">&#8594;</span></ng-template>
         </button>
       </form>
 

@@ -1,20 +1,25 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
-import { Api, EmployeeOverview } from '../../services/api';
+import { Api, WorkforceOverview } from '../../services/api';
 import { Dashboard } from './dashboard';
 
 describe('Dashboard', () => {
   let fixture: ComponentFixture<Dashboard>;
-  let employees: EmployeeOverview[];
+  let overview: WorkforceOverview;
 
   beforeEach(async () => {
-    employees = [];
+    overview = {
+      employees: [],
+      payrollRecordCount: 0,
+      payrollCoverage: 0,
+      leaveDays: 0,
+    };
     await TestBed.configureTestingModule({
       imports: [Dashboard],
       providers: [
         provideRouter([]),
-        { provide: Api, useValue: { getEmployeeOverview: () => of(employees) } },
+        { provide: Api, useValue: { getWorkforceOverview: () => of(overview) } },
       ],
     }).compileComponents();
 
@@ -38,8 +43,8 @@ describe('Dashboard', () => {
   });
 
   it('uses live employee, department, salary and leave data', async () => {
-    employees = [
-      {
+    overview = {
+      employees: [{
         employeeId: 7,
         employeeFullName: 'Alex Morgan',
         gender: 'Female',
@@ -48,8 +53,12 @@ describe('Dashboard', () => {
         basicSalary: 4800,
         netPay: 4200,
         leaveTotalDays: 3,
-      },
-    ];
+      }],
+      averageSalary: 4800,
+      payrollRecordCount: 1,
+      payrollCoverage: 1,
+      leaveDays: 3,
+    };
     fixture = TestBed.createComponent(Dashboard);
     await fixture.whenStable();
     fixture.detectChanges();
@@ -60,5 +69,27 @@ describe('Dashboard', () => {
     expect(dashboardElement.textContent).toContain('4,200');
     expect(dashboardElement.textContent).toContain('4,800');
     expect(dashboardElement.textContent).toContain('3');
+    expect(dashboardElement.textContent).toContain('Payroll records');
+    expect(dashboardElement.textContent).toContain('1 linked to current employees');
+  });
+
+  it('shows payroll records and leave days even when their employee IDs are unmatched', async () => {
+    overview = {
+      employees: [{ employeeId: 10, employeeFullName: 'Alex Morgan' }],
+      averageSalary: 1000,
+      payrollRecordCount: 2,
+      payrollCoverage: 0,
+      leaveDays: 10,
+    };
+    fixture = TestBed.createComponent(Dashboard);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const dashboardElement = fixture.nativeElement as HTMLElement;
+    expect(dashboardElement.textContent).toContain('Payroll records');
+    expect(dashboardElement.textContent).toContain('2');
+    expect(dashboardElement.textContent).toContain('0 linked to current employees');
+    expect(dashboardElement.textContent).toContain('10');
+    expect(dashboardElement.textContent).toContain('1,000');
   });
 });

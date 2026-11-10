@@ -24,8 +24,12 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
 
-        if (!user.getIsActive()) {
-            throw new RuntimeException("User account is inactive");
+        return createUserDetails(user);
+    }
+
+    public UserDetails createUserDetails(User user) {
+        if (Boolean.FALSE.equals(user.getIsActive())) {
+            throw new UsernameNotFoundException("User account is inactive");
         }
 
         String roleName = user.getRole() != null ? user.getRole().getName() : "USER";
@@ -38,4 +42,3 @@ public class CustomUserDetailsService implements UserDetailsService {
         );
     }
 }
-

@@ -14,7 +14,8 @@ import {
   LucideReceipt,
   LucideCalendarClock,
   LucideClipboardList,
-  LucideShieldCheck
+  LucideShieldCheck,
+  LucideLogOut
 } from '@lucide/angular';
 
 @Component({
@@ -31,7 +32,8 @@ import {
     LucideReceipt,
     LucideCalendarClock,
     LucideClipboardList,
-    LucideShieldCheck
+    LucideShieldCheck,
+    LucideLogOut
   ],
   selector: 'app-sidebar',
   styleUrl: './sidebar.css',
@@ -42,17 +44,13 @@ export class Sidebar {
   private readonly auth = inject(Auth);
 
   profile: AccountProfile | null = null;
-  profileLoading = true;
+  profileLoading = false;
   profileOpen = false;
   savingProfile = false;
   profileError = '';
   profileSuccess = '';
   profileLoadError = '';
   profileForm = { username: '', email: '', password: '' };
-
-  constructor() {
-    this.loadProfile();
-  }
 
   openProfile(): void {
     this.profileError = this.profileLoadError;
@@ -64,6 +62,10 @@ export class Sidebar {
     };
     this.profileOpen = true;
     if (!this.profile && !this.profileLoading) this.loadProfile();
+  }
+
+  logout(): void {
+    this.auth.logout();
   }
 
   closeProfile(): void {
@@ -112,6 +114,13 @@ export class Sidebar {
         this.profile = profile;
         this.auth.setProfile(profile);
         this.profileLoadError = '';
+        if (this.profileOpen) {
+          this.profileForm = {
+            username: profile.username,
+            email: profile.email,
+            password: '',
+          };
+        }
         this.profileLoading = false;
       },
       error: () => {
